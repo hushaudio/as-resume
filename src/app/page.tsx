@@ -1,3 +1,5 @@
+import InteractiveScene from "@/components/InteractiveScene";
+
 export default function Home() {
   return (
     <main className="prose prose-invert mx-auto max-w-3xl">
@@ -43,6 +45,16 @@ export default function Home() {
       <section className="mt-8">
         <h2 className="text-xl font-medium">Skills</h2>
         <p className="mt-2">TypeScript · React · Next.js · Node.js · PostgreSQL · AWS</p>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="text-xl font-medium">Interactive</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Lightweight, lazy-loaded Three.js accent (client-only, visible-on-demand).
+        </p>
+        <div className="mt-4">
+          <InteractiveScene />
+        </div>
       </section>
 
       <footer className="mt-12 text-sm text-muted-foreground">Generated with as-resume</footer>
