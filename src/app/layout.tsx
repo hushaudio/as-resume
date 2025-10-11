@@ -27,8 +27,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="fixed top-4 left-0 right-0 z-50 pointer-events-none">
           <nav className="mx-auto max-w-4xl px-4">
             <div className="flex items-center justify-between rounded-full bg-black/20 backdrop-blur-md px-4 py-2 ring-1 ring-white/10 pointer-events-auto">
-              <Link href="/resume" className="text-sm text-white/80 hover:text-white transition-colors">Resume</Link>
-              <Link href="/graph" className="text-sm text-white/80 hover:text-white transition-colors">Graph</Link>
+              <Link href="/resume" className="text-sm text-white/80 hover:text-white transition-colors">Classic Resume</Link>
+              <Link href="/graph" className="text-sm text-white/80 hover:text-white transition-colors">Experience Graph</Link>
             </div>
           </nav>
         </div>

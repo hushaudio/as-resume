@@ -84,8 +84,8 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
         role: 6.5,
         experience: 7.5,
         company: 7.5,
-        project: 9.5,
-        music: 9.5,
+        project: 9.0, // slightly closer
+        music: 10.5,  // slightly farther to avoid overlap with projects
         skill: 12.0,
         person: 0,
       } as const as Record<string, number>;
@@ -117,7 +117,20 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
 
       for (const [type, arr] of groups) {
         const r = typeToRadius[type] ?? 3.0;
-        const phase = (hash(type) / 4294967295) * Math.PI * 2;
+        // Deterministic per-type base phase
+        let phase = (hash(type) / 4294967295) * Math.PI * 2;
+        // Additional label-based jitter to separate similarly named nodes across types
+        const labelHash = (s: string) => {
+          let h = 0;
+          for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+          return h / 4294967295;
+        };
+        if (type === "music" || type === "project") {
+          // Use node labels to offset the phase slightly
+          // Combine all labels in this group to make distribution stable across renders
+          const combined = arr.map((n) => n.label).join("|");
+          phase += (labelHash(combined) - 0.5) * 0.6; // ±0.3 rad tweak
+        }
         // Base placement
         const pts = fibonacciSphere(arr.length, r, phase);
 

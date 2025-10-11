@@ -296,7 +296,7 @@ export default function Resume() {
 
       {/* One-liner integrated into Summary; section removed for professional tone */}
 
-      <footer className="mt-12 text-sm text-muted-foreground">Created by Aaron Shier using Next.js</footer>
+      <footer className="mt-12 text-sm text-muted-foreground pb-4 pt-4">Created by Aaron Shier using Next.js</footer>
     </main>
   );
 }
