@@ -6,7 +6,9 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "deploy": "rsync -avz --delete --exclude 'node_modules' ./ root@143.110.226.194:/root/as-resume",
+    "server": "ssh root@143.110.226.194"
   },
   "dependencies": {
     "next": "15.5.4",

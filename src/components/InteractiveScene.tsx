@@ -97,7 +97,7 @@ export default function InteractiveScene({ graph }: { graph: GraphData }) {
     // Light WebGL capability check
     try {
       const canvas = document.createElement("canvas");
-      const ok = !!(canvas.getContext("webgl") || canvas.getContext("experimental-webgl" as any));
+      const ok = !!(canvas.getContext("webgl") || canvas.getContext("experimental-webgl"));
       setCanWebGL(ok);
     } catch {
       setCanWebGL(false);

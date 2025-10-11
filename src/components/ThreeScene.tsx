@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import { useEffect, useRef, useState, useMemo } from "react";
@@ -19,17 +21,15 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
   const [isTouchDevice, setIsTouchDevice] = useState(false);
   const isTouchRef = useRef(false);
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
-  const [debugInfo, setDebugInfo] = useState<string>('');
+  // debugInfo removed
   
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
       const hasTouch = 'ontouchstart' in window || (navigator as any).maxTouchPoints > 0 || window.matchMedia('(hover: none)').matches;
       setIsTouchDevice(!!hasTouch);
-      setDebugInfo(`Touch: ${hasTouch}, maxTouchPoints: ${(navigator as any).maxTouchPoints}, ontouchstart: ${'ontouchstart' in window}, hover: ${window.matchMedia('(hover: none)').matches}`);
     } catch (e) { 
       setIsTouchDevice(false); 
-      setDebugInfo(`Error: ${e}`);
     }
   }, []);
   useEffect(() => {
@@ -97,7 +97,7 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
       const indexToId: string[] = [];
       const nodeById = new Map(memo.nodes.map((n) => [n.id, n] as const));
 
-      const center = memo.nodes.find((n) => n.type === ("person" as any));
+      const center = memo.nodes.find((n) => n.type === ("person" as unknown as string));
       const others = memo.nodes.filter((n) => n !== center);
 
       // Helper: fibonacci sphere distribution on radius r
@@ -231,7 +231,7 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
       const getNodeColor = (name: string, fallbackHex: number) => {
         const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
         if (v) {
-          try { return new THREE.Color(v as any); } catch {}
+        try { return new THREE.Color(v as string); } catch {}
         }
         return new THREE.Color(fallbackHex);
       };
@@ -292,7 +292,7 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
       const getCSSColor = (name: string, fallback: number) => {
         const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
         if (!v) return fallback;
-        const c = new THREE.Color(v as any);
+        const c = new THREE.Color(v as string);
         return c.getHex();
       };
       const lineColor = getCSSColor("--accent-brown", 0x8b6b4a);
@@ -305,7 +305,7 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
       // Dynamic pick radius - much larger on touch for easier hits
       const updatePickThreshold = () => {
         const threshold = isTouchRef.current ? 0.25 : 0.12;
-        (raycaster.params as any).Points = { threshold };
+      (raycaster.params as any).Points = { threshold };
       };
       updatePickThreshold();
       const ndc = new THREE.Vector2();
@@ -594,16 +594,7 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
       className="relative w-full h-full select-none"
       style={{ WebkitUserSelect: 'none', userSelect: 'none', WebkitTouchCallout: 'none' as any }}
     >
-      {/* Debug info */}
-      {debugInfo && (
-        <div className="absolute top-20 left-4 text-xs text-white/60 bg-black/80 p-2 rounded z-50 max-w-xs pointer-events-none">
-          <div>Debug: {debugInfo}</div>
-          <div>isTouchDevice: {String(isTouchDevice)}</div>
-          <div>mobileOpen: {String(mobileOpen)}</div>
-          <div>mobileAnchor: {mobileAnchor || 'null'}</div>
-          <div>hover: {hover?.label || 'null'}</div>
-        </div>
-      )}
+      {/* Debug info removed */}
       {/* Tooltip container to keep within viewport */}
       <TooltipStyles />
       {!ready && (

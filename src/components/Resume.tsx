@@ -54,10 +54,10 @@ const data = {
     },
     {
       title: "Founder",
-      company: "Iowa COVID County Tracker",
+      company: "jeffersoncountyhealth.com",
       years: "2020",
       bullets: ["County-level dashboards from state data; covered by Southeast Iowa Union."],
-      link: "https://www.southeastiowaunion.com/news/fairfield-man-designs-app-to-track-covid/"
+      link: "https://jeffersoncountyhealth.com"
     },
     {
       title: "Consulting Engineer",

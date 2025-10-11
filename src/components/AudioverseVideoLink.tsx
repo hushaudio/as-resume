@@ -14,7 +14,7 @@ export default function AudioverseVideoLink({ src }: { src: string }) {
         >
         click here for video example
       </button>
-      <p>This demo uses mock data for the "Audioverse" and "Feed" screens to illustrate flows that would normally require larger amounts of user data. "Scan", "Libary", and "Profile" screens all use real blockchain data on the Goerli test network and real IPFS peer shared data for full decentralization.</p>
+      <p>This demo uses mock data for the &quot;Audioverse&quot; and &quot;Feed&quot; screens to illustrate flows that would normally require larger amounts of user data. &quot;Scan&quot;, &quot;Libary&quot;, and &quot;Profile&quot; screens all use real blockchain data on the Goerli test network and real IPFS peer shared data for full decentralization.</p>
     </div>
 
       {open && (
