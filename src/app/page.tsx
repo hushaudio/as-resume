@@ -12,21 +12,22 @@ const data = {
     "Strange Music",
     "Hungryroot",
     "deadmau5",
-    "Ric Wake / Caroline Jones",
+    "Oberha5li Studios",
+    "Ric Wake / RB-360",
     "Iron Man 3",
   ],
   about:
     "I turn my own needs into dependable tools—rapid prototypes that harden into production. My lane: the overlap of web/app, audio DSP/JUCE, and local-AI. When others say ‘not possible,’ I map constraints, build the path, and make it stable enough for stage or scale.",
   whatIDo: [
     "Product engineering: building production applications and native tools across web, desktop, and mobile",
-    "AI/ML systems: end-to-end pipelines across audio, text, and video — C++/JUCE, ONNX, Transformers/Hugging Face, local and cloud inference",
+    "AI/ML systems: end-to-end pipelines across audio, text, image, and video — C++/JUCE, ONNX, Transformers/Hugging Face, local and cloud inference, AI training for text (supervised), image and audio",
     "Performance & analytics: instrumentation, SEO-aware frontend engineering, performance budgets and Core Web Vitals; practical experience running A/B tests when needed",
     "Live systems & shows: MIDI/MTC, Max devices, clocking networks, and hardened fail-safe stage rigs",
   ],
   experience: [
     {
       title: "UE5/Game Tech (Consult)",
-      company: "deadmau5 (Oberha5li Studios)",
+      company: "Oberha5li Studios",
       years: "2024–Present",
       bullets: ["Unblocked TestFlight deployment for Mowingtons."],
       link: "https://store.steampowered.com/app/2766880/Meowingtons_Simulator/"
@@ -53,7 +54,7 @@ const data = {
       link: "https://565media.com"
     },
     {
-      title: "Founder/Engineer",
+      title: "Founder",
       company: "Iowa COVID County Tracker",
       years: "2020",
       bullets: ["County-level dashboards from state data; covered by Southeast Iowa Union."],
@@ -88,11 +89,11 @@ const data = {
     "Signed to Strange Music (Tech N9ne) with releases/features — leveraged to open technical collaborations.",
   ],
   projects: [
-    "DeepSampler2 — first text→audio-sample VST",
-    "Interloper — JUCE/ONNX embedded generator",
-    "Audialab Engine — local Python AI host",
-    "The Audioverse — decentralized streaming platform",
-    "The Oracle — Swiss Ephemeris app (pre-launch)",
+    "DeepSampler2",
+    "Interloper",
+    "Audialab Engine",
+    "The Audioverse",
+    "The Oracle",
   ],
   // Detailed projects for page rendering (graph uses projects above)
   projectsDetailed: [
@@ -125,11 +126,13 @@ const data = {
     },
   ],
   music: [
-    "Strange Music colaboration release BLIGHT with Tech N9ne",
-    "Producer credits for 'Wondergirls - Lets go all the way' in Iron Man 3 soundtrack",
-    "Music production for the viral video 'Kazoo Kid' remix (with Mike Diva)",
-    "Multiple charting SiriusXM BPM remixes",
-    "Producer credits for Orgy — 'Talk Sick', 'Monster in Me'",
+    "Strange Music",
+    "W.H.A.T. — Tech N9ne, HU$H, Kim Dracula",
+    "BLIGHT — Tech N9ne, HU$H",
+    "Iron Man 3 soundtrack credit",
+    "Kazoo Kid remix (with Mike Diva)",
+    "SiriusXM BPM remixes",
+    "Orgy — 'Talk Sick', 'Monster in Me'",
   ],
   skills: [
     "React",
@@ -289,71 +292,93 @@ const graphMetadata = {
     }
   },
   experience: {
-    "Founding Engineer — Audialab": {
-      description: "Led development of three groundbreaking AI audio plugins as first engineering hire. DeepSampler2: world's first text-to-audio-sample VST. Interloper: embedded-ONNX generator. Audialab Engine: local model host. Architected full stack from DSP to UI, integrated cutting-edge AI models, and shipped production tools used by thousands of producers.",
+    "Founding Engineer": {
+      description: "Early-stage technical role focused on building foundations from the ground up. Skills developed: system architecture, technical direction setting, full-stack ownership from DSP to UI, integrating cutting-edge technologies, and shipping production-grade tools. Expertise in taking research/prototypes and hardening them for real-world use.",
       technologies: ["C++", "JUCE", "Python", "React", "ONNX", "DSP"],
-      keyAchievements: ["First-to-market text-to-audio VST", "Zero-dependency AI plugin architecture", "Stable Audio Open beta contractor"]
+      keyAchievements: ["First engineering hire experience", "Architecture from scratch", "Production plugin development"]
     },
-    "Contract Engineer — 565 Media": {
-      description: "Built modular landing page system powering user acquisition for Hungryroot (early stage → ~$1B valuation). Implemented continuous A/B testing framework, clean analytics event schemas, and SEO-optimized React/Next builds with green Core Web Vitals. Maintained CI/CD pipelines and scaled infrastructure to handle high-traffic campaigns.",
+    "Contract Engineer": {
+      description: "Freelance/contract engineering focused on delivering specific technical solutions and scaling existing systems. Skills developed: rapid context switching, client communication, building modular reusable systems, A/B testing frameworks, analytics hygiene, SEO-optimized React/Next builds, CI/CD pipeline maintenance, and infrastructure scaling.",
       technologies: ["React", "Next.js", "Node.js", "Docker", "Nginx", "CI/CD"],
-      keyAchievements: ["Scaled to $1B valuation growth", "Green Core Web Vitals at scale", "Modular LP system"]
+      keyAchievements: ["Long-term client relationships", "High-traffic scaling", "Core Web Vitals optimization"]
     },
-    "Full-Stack Engineer — OneShotMove": {
-      description: "Built complete booking platform with instant quoting, payments, and scheduling. Integrated Google Maps for mileage calculation, Google Calendar for crew availability, and ops rules engine. Achieved #1 Yelp ranking in Los Angeles (2018) through exceptional UX and reliable service.",
+    "Full-Stack Engineer": {
+      description: "End-to-end engineering covering every layer from UI to database. Skills developed: complete application ownership, rapid prototyping to production, integrating third-party APIs (Google Maps, Calendar), building quote engines, payment systems, scheduling logic, and optimizing for user experience.",
       technologies: ["React", "Next.js", "Node.js", "Google APIs"],
-      keyAchievements: ["#1 Yelp in LA (2018)", "Real-time quote engine", "Calendar-driven scheduling"]
+      keyAchievements: ["Full platform ownership", "Rapid development cycles", "UX-focused engineering"]
     },
-    "Consulting Engineer — Ric Wake / Caroline Jones": {
-      description: "Designed and built one-person live-looping rig for on-stage performances—a system industry experts said wasn't possible. Created custom Max for Live devices with fail-safe recovery, tight MTC sync with Nir Z's drums, and networked clocking for sample-accurate timing. Delivered working prototype in one week, hardened for tour reliability.",
+    "Consulting Engineer": {
+      description: "Advisory technical role solving complex technical challenges and designing custom integrations. Skills developed: live performance systems, real-time audio/MIDI processing, fail-safe architecture, hardware/software integration, rapid prototyping under tight deadlines, and building tour-grade reliability into systems.",
       technologies: ["Max for Live", "MIDI/MTC"],
-      keyAchievements: ["'Impossible' system shipped in 1 week", "Tour-proven reliability", "Fail-safe recovery architecture"]
+      keyAchievements: ["'Impossible' problem solving", "Rapid prototyping", "Tour-grade reliability"]
     },
-    "UE5/Game Tech (Consult) — deadmau5": {
-      description: "Unblocked TestFlight deployment pipeline for Meowingtons Simulator (Unreal Engine 5 title). Documented repeatable release process, solved platform-specific build issues, and provided ongoing technical advisement for game deployment.",
+    "UE5/Game Tech (Consult)": {
+      description: "Specialized consulting in game development and deployment. Skills developed: Unreal Engine 5 architecture, deployment pipeline design, platform-specific build troubleshooting, process documentation, and ongoing technical advisement for interactive experiences.",
       technologies: ["Unreal Engine 5"],
-      keyAchievements: ["Unblocked TestFlight release", "Documented deployment process"]
+      keyAchievements: ["Pipeline unblocking", "Process documentation", "Platform expertise"]
     },
-    "Founder/Engineer — Iowa COVID County Tracker": {
-      description: "Ingested and normalized Iowa state COVID reports into county-level dashboards during the pandemic. Provided trend visibility for local communities. Featured by Southeast Iowa Union for public service.",
-      technologies: ["React", "Next.js", "TypeScript", "Data processing"],
-      keyAchievements: ["Southeast Iowa Union feature", "Real-time data visualization"]
+    
+    "Founder": {
+      description: "Founder role focused on initiating products and ventures: vision-setting, early product/market fit discovery, recruiting and team formation, and building initial technical infrastructure to validate ideas.",
+      technologies: ["Product strategy", "Architecture", "Prototyping"],
+      keyAchievements: ["Launched initial products", "Early-stage leadership"]
     }
   },
   companies: {
     "Audialab": {
-      description: "AI audio technology company developing cutting-edge VST plugins. Pioneering text-to-audio generation for music producers."
+      description: "Led development of two groundbreaking AI audio plugins as founding engineer. DeepSampler2: world's first text-to-audio-sample VST. Interloper: embedded-ONNX generator. Audialab Engine: local model host. Architected full stack from DSP to UI, integrated cutting-edge AI models (Stable Audio Open beta contractor), and shipped production tools used by thousands of producers.",
+      technologies: ["C++", "JUCE", "Python", "React", "ONNX", "DSP"],
+      keyAchievements: ["First-to-market text-to-audio VST", "Zero-dependency AI plugin architecture", "Stable Audio Open beta contractor"]
     },
     "565 Media": {
-      description: "Digital marketing agency specializing in high-converting landing pages and growth marketing for startups."
+      description: "Built modular landing page system powering user acquisition for Hungryroot as they scaled from early stage to ~$1B valuation. Implemented continuous A/B testing framework, clean analytics event schemas, and SEO-optimized React/Next builds with green Core Web Vitals. Maintained CI/CD pipelines and scaled infrastructure to handle high-traffic campaigns.",
+      technologies: ["React", "Next.js", "Node.js", "Docker", "Nginx", "CI/CD"],
+      keyAchievements: ["Scaled infrastructure through $1B valuation growth", "Green Core Web Vitals at scale", "Modular LP system"]
     },
-    "deadmau5 (Oberha5li Studios)": {
-      description: "Electronic music producer and game developer. Creator of Meowingtons Simulator and various music tech projects."
+    "Oberha5li Studios": {
+      description: "Unblocked TestFlight deployment pipeline for Meowingtons Simulator (Unreal Engine 5 title). Documented repeatable release process, solved platform-specific build issues, and provided ongoing technical advisement for game deployment.",
+      technologies: ["Unreal Engine 5"],
+      keyAchievements: ["Unblocked TestFlight release", "Documented deployment process"]
+    },
+    "deadmau5": {
+      description: "Grammy-nominated electronic music producer Joel Zimmerman. Pioneer in electronic music and technology integration."
     },
     "OneShotMove": {
-      description: "Moving and logistics startup offering instant quotes and calendar-based booking in Los Angeles."
+      description: "Built complete booking platform with instant quoting, payments, and scheduling. Integrated Google Maps for mileage calculation, Google Calendar for crew availability, and ops rules engine. Achieved #1 Yelp ranking in Los Angeles (2018) through exceptional UX and reliable service.",
+      technologies: ["React", "Next.js", "Node.js", "Google APIs"],
+      keyAchievements: ["#1 Yelp in LA (2018)", "Real-time quote engine", "Calendar-driven scheduling"]
     },
     "Ric Wake / RB-360": {
-      description: "Music production and live performance company. Collaborations with Caroline Jones and drummer Nir Z."
+      description: "Designed and built one-person live-looping rig for on-stage performances with Caroline Jones—a system industry experts said wasn't possible. Created custom Max for Live devices with fail-safe recovery, tight MTC sync with Nir Z's drums, and networked clocking for sample-accurate timing. Delivered working prototype in one week, hardened for tour reliability.",
+      technologies: ["Max for Live", "MIDI/MTC"],
+      keyAchievements: ["'Impossible' system shipped in 1 week", "Tour-proven reliability", "Fail-safe recovery architecture"]
     },
     "Iowa COVID County Tracker": {
-      description: "Public service project providing granular COVID-19 data visualization for Iowa communities during the pandemic."
+      description: "Founded and built this public service project during the pandemic. Ingested and normalized Iowa state COVID reports into county-level dashboards, providing trend visibility for local communities. Featured by Southeast Iowa Union for public service contribution.",
+      technologies: ["React", "Next.js", "TypeScript", "Data processing"],
+      keyAchievements: ["Southeast Iowa Union feature", "Real-time data visualization", "Public service during pandemic"]
     }
   },
   music: {
-    "Strange Music colaboration release BLIGHT with Tech N9ne": {
-      description: "Production work on BLIGHT, a Strange Music label release. Collaboration with Tech N9ne, one of the most successful independent hip-hop artists. Demonstrated ability to work at professional label standards while maintaining creative integrity."
+    "Strange Music": {
+      description: "Independent hip-hop label founded by Tech N9ne. Signed artist status with multiple releases and collaborations. One of the most successful independent labels in hip-hop, demonstrating ability to work at professional label standards."
     },
-    "Producer credits for 'Wondergirls - Lets go all the way' in Iron Man 3 soundtrack": {
-      description: "Production credit on Wondergirls track featured in Marvel's Iron Man 3 official soundtrack. High-profile sync placement demonstrating production quality and industry connections."
+    "W.H.A.T. — Tech N9ne, HU$H, Kim Dracula": {
+      description: "Strange Music release featuring Tech N9ne and Kim Dracula. Three-way collaboration bringing together hip-hop and alternative scenes. Full production and artist feature credit."
     },
-    "Music production for the viral video 'Kazoo Kid' remix (with Mike Diva)": {
+    "BLIGHT — Tech N9ne, HU$H": {
+      description: "Strange Music collaboration release with Tech N9ne. Production work with one of the most successful independent hip-hop artists, demonstrating professional label-quality standards."
+    },
+    "Iron Man 3 soundtrack credit": {
+      description: "Production credit on Wondergirls track 'Let's Go All The Way' featured in Marvel's Iron Man 3 official soundtrack. High-profile sync placement demonstrating production quality and industry connections."
+    },
+    "Kazoo Kid remix (with Mike Diva)": {
       description: "Viral remix collaboration with director Mike Diva. Multi-million view remix demonstrating ability to create culturally relevant content that resonates with internet audiences."
     },
-    "Multiple charting SiriusXM BPM remixes": {
+    "SiriusXM BPM remixes": {
       description: "Several official remixes that charted on SiriusXM's BPM electronic music channel (2009-2012). Demonstrated consistent ability to create radio-ready dance music productions."
     },
-    "Producer credits for Orgy — 'Talk Sick', 'Monster in Me'": {
+    "Orgy — 'Talk Sick', 'Monster in Me'": {
       description: "Production work with industrial rock band Orgy. Contributed to multiple album tracks, working with established artists in the alternative/industrial scene."
     }
   },
@@ -369,6 +394,9 @@ const graphMetadata = {
     },
     "deadmau5": {
       description: "Grammy-nominated electronic music producer. Consulting on Unreal Engine game development and deployment."
+    },
+    "Oberha5li Studios": {
+      description: "Game development studio founded by deadmau5. Technical consulting on Unreal Engine deployment and architecture."
     },
     "Ric Wake / RB-360": {
       description: "Music industry veteran (Ric Wake) and rising country artist (Caroline Jones). Built tour-grade live technology."
@@ -413,17 +441,33 @@ export default function Home() {
     }
 
     // Experiences and companies
+    // Track unique roles to avoid duplicates
+    const rolesAdded = new Set<string>();
+    
     for (const role of data.experience) {
       const expId = `exp:${slug(`${role.title}@${role.company}`)}`;
-      const expKey = `${role.title} — ${role.company}`;
-      const expMeta = graphMetadata.experience[expKey as keyof typeof graphMetadata.experience];
+      const expKey = role.title;
+      const expMeta = graphMetadata.experience[role.title as keyof typeof graphMetadata.experience];
       addNode(expId, expKey, "experience", expMeta);
       addLink("person", expId);
 
+      // Add role type node (if not already added)
+      const roleId = `role:${slug(role.title)}`;
+      if (!rolesAdded.has(roleId)) {
+        const roleMeta = graphMetadata.experience[role.title as keyof typeof graphMetadata.experience];
+        addNode(roleId, role.title, "role", roleMeta);
+        addLink("person", roleId);
+        rolesAdded.add(roleId);
+      }
+      // Connect experience to role type
+      addLink(expId, roleId);
+
+      // Add company node
       const compId = `company:${slug(role.company)}`;
       const compMeta = graphMetadata.companies[role.company as keyof typeof graphMetadata.companies];
       addNode(compId, role.company, "company", compMeta);
-      addLink(expId, compId);
+      // Connect role type to company
+      addLink(roleId, compId);
     }
 
     // Projects
@@ -455,27 +499,39 @@ export default function Home() {
     // Explicit link rules: map skills to experiences/projects and creds to related nodes.
     const linkRules = {
       experience: [
-        { key: "Founding Engineer — Audialab", skills: ["Python", "C++", "JUCE", "DSP", "ONNX", "React", "TypeScript"] },
-        { key: "Contract Engineer — 565 Media", skills: ["React", "Next.js", "Node.js", "CI/CD", "Nginx", "Docker", "TypeScript"] },
-        { key: "Full-Stack Engineer — OneShotMove", skills: ["React", "Next.js", "Node.js", "TypeScript", "CI/CD"] },
-        { key: "Consulting Engineer — Ric Wake / RB-360", skills: ["Max for Live", "MIDI/MTC"] },
-        { key: "UE5/Game Tech (Consult) — deadmau5 (Oberha5li Studios)", skills: ["Unreal Engine 5"] },
-        { key: "Founder/Engineer — Iowa COVID County Tracker", skills: ["React", "Next.js", "TypeScript", "Node.js", "CI/CD"] },
+        { key: "Founding Engineer", skills: ["Python", "C++", "JUCE", "DSP", "ONNX", "React", "TypeScript"] },
+        { key: "Contract Engineer", skills: ["React", "Next.js", "Node.js", "CI/CD", "Nginx", "Docker", "TypeScript"] },
+        { key: "Full-Stack Engineer", skills: ["React", "Next.js", "Node.js", "TypeScript", "CI/CD"] },
+        { key: "Consulting Engineer", skills: ["Max for Live", "MIDI/MTC"] },
+        { key: "UE5/Game Tech (Consult)", skills: ["Unreal Engine 5"] },
+        { key: "Founder", skills: ["React", "Next.js", "TypeScript", "Node.js", "CI/CD"] },
       ],
       projects: [
-        { key: "DeepSampler2 — first text→audio-sample VST", skills: ["C++", "JUCE", "DSP", "ONNX", "React", "TypeScript"] },
-        { key: "Interloper — JUCE/ONNX embedded generator", skills: ["C++", "JUCE", "ONNX", "DSP"] },
-        { key: "Audialab Engine — local Python AI host", skills: ["Python", "ONNX", "Docker"] },
-        { key: "The Audioverse — decentralized streaming platform", skills: ["React Native", "NestJS", "Node.js", "TypeScript", "Solidity", "CI/CD"] },
-        { key: "The Oracle — Swiss Ephemeris app (pre-launch)", skills: ["React", "Next.js", "TypeScript", "Node.js"] },
+        { key: "DeepSampler2", skills: ["C++", "JUCE", "DSP", "ONNX", "React", "TypeScript"] },
+        { key: "Interloper", skills: ["C++", "JUCE", "ONNX", "DSP"] },
+        { key: "Audialab Engine", skills: ["Python", "ONNX", "Docker"] },
+        { key: "The Audioverse", skills: ["React Native", "NestJS", "Node.js", "TypeScript", "Solidity", "CI/CD"] },
+        { key: "The Oracle", skills: ["React", "Next.js", "TypeScript", "Node.js"] },
+      ],
+      music: [
+        { key: "Strange Music", releases: ["W.H.A.T. — Tech N9ne, HU$H, Kim Dracula", "BLIGHT — Tech N9ne, HU$H"] },
       ],
       creds: [
-        { cred: "Audialab", targets: ["Founding Engineer — Audialab", "DeepSampler2 — first text→audio-sample VST", "Interloper — JUCE/ONNX embedded generator", "Audialab Engine — local Python AI host"] },
-        { cred: "Strange Music", targets: ["Strange Music releases with Tech N9ne (feat. Kim Dracula)"] },
-        { cred: "Hungryroot", targets: ["Contract Engineer — 565 Media"] },
-        { cred: "deadmau5", targets: ["UE5/Game Tech (Consult) — deadmau5"] },
-        { cred: "Ric Wake / RB-360", targets: ["Consulting Engineer — Ric Wake / Caroline Jones"] },
+        { cred: "Audialab", targets: ["Founding Engineer", "Audialab", "DeepSampler2", "Interloper", "Audialab Engine"] },
+        { cred: "Strange Music", targets: ["Strange Music", "W.H.A.T. — Tech N9ne, HU$H, Kim Dracula", "BLIGHT — Tech N9ne, HU$H"] },
+        { cred: "Hungryroot", targets: ["Contract Engineer", "565 Media"] },
+        { cred: "deadmau5", targets: ["deadmau5", "Oberha5li Studios"] },
+        { cred: "Oberha5li Studios", targets: ["UE5/Game Tech (Consult)", "Oberha5li Studios", "deadmau5"] },
+        { cred: "Ric Wake / RB-360", targets: ["Consulting Engineer", "Ric Wake / RB-360"] },
         { cred: "Iron Man 3", targets: ["Iron Man 3 soundtrack credit"] },
+      ],
+      roles: [
+        { key: "Founding Engineer", companies: ["Audialab"] },
+        { key: "Contract Engineer", companies: ["565 Media"] },
+        { key: "Full-Stack Engineer", companies: ["OneShotMove"] },
+        { key: "Consulting Engineer", companies: ["Ric Wake / RB-360"] },
+        { key: "UE5/Game Tech (Consult)", companies: ["Oberha5li Studios"] },
+        { key: "Founder", companies: ["Iowa COVID County Tracker"] },
       ],
     } as const;
 
@@ -503,6 +559,16 @@ export default function Home() {
       }
     }
 
+    // Apply music links (label to releases)
+    for (const r of linkRules.music) {
+      const labelId = labelToId.get(r.key);
+      if (!labelId) continue;
+      for (const release of r.releases) {
+        const releaseId = labelToId.get(release);
+        if (releaseId) addLink(labelId, releaseId);
+      }
+    }
+
     // Apply creds → related nodes
     for (const r of linkRules.creds) {
       const cid = labelToId.get(r.cred);
@@ -512,6 +578,9 @@ export default function Home() {
         if (tid) addLink(cid, tid);
       }
     }
+
+    // Apply roles → companies (already connected in experience loop, this is for validation)
+    // Note: Role to company connections are now handled in the experience loop above
 
     return { nodes, links };
   })();
@@ -553,7 +622,7 @@ export default function Home() {
       </header>
 
       <section className="mt-8">
-        <h2 className="text-xl font-medium text-accent-brown">Summary</h2>
+        <h2 className="text-xl font-medium">Summary</h2>
         <p className="mt-2">{data.about}</p>
         {data.oneLiner && (
           <p className="mt-2 text-sm text-muted-foreground">{data.oneLiner}</p>
@@ -656,7 +725,7 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="mt-12 text-sm text-muted-foreground">Generated with as-resume</footer>
+      <footer className="mt-12 text-sm text-muted-foreground">Created by Aaron Shier using Next.js</footer>
     </main>
   );
 }

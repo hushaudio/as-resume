@@ -5,7 +5,7 @@ import { Suspense, lazy, useMemo, useRef, useState, useEffect } from "react";
 export type GraphNode = {
   id: string;
   label: string;
-  type: "person" | "cred" | "experience" | "company" | "project" | "music" | "skill";
+  type: "person" | "cred" | "experience" | "company" | "project" | "music" | "skill" | "role";
   meta?: Record<string, unknown>;
 };
 

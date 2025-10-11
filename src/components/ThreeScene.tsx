@@ -35,8 +35,8 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
       const controls = new OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.08;
-      controls.minDistance = 10;
-      controls.maxDistance = 45;
+      controls.minDistance = 5;
+      controls.maxDistance = 15;
 
       const resize = () => {
         const r = el.getBoundingClientRect();
@@ -79,8 +79,9 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
       // Group nodes by type and choose shell radii (extreme spacing to prevent any overlap)
       const typeToRadius: Record<string, number> = {
         cred: 5.0,
-        experience: 7.0,
-        company: 7.0,
+        role: 6.5,
+        experience: 7.5,
+        company: 7.5,
         project: 9.5,
         music: 9.5,
         skill: 12.0,
@@ -229,7 +230,7 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
           }
         }
         renderer.domElement.style.cursor = "grab";
-        setHover(null);
+          setHover(null);
       };
       const onPointerLeave = () => { setHover(null); renderer.domElement.style.cursor = "grab"; };
       renderer.domElement.style.cursor = "grab";
@@ -325,7 +326,7 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
           .map((l) => (
             <div
               key={l.id}
-              className="absolute text-[10px] text-white/70 whitespace-nowrap cursor-pointer hover:text-white transition-colors"
+              className="absolute text-[10px] text-white/70 whitespace-nowrap cursor-pointer hover:text-white transition-colors select-none"
               style={{
                 left: l.x,
                 top: l.y,
@@ -406,13 +407,13 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
               
               {/* Key Achievements */}
               {(currentNode.meta as any).keyAchievements && (
-                <div className="mt-2">
+            <div className="mt-2">
                   <div className="text-[10px] text-[color:var(--accent-brown)] font-medium mb-1">Key Achievements</div>
                   <ul className="list-disc list-inside text-[10px] text-white/80 space-y-0.5">
                     {((currentNode.meta as any).keyAchievements || []).map((achievement: string, i: number) => (
                       <li key={i}>{achievement}</li>
-                    ))}
-                  </ul>
+                ))}
+              </ul>
                 </div>
               )}
             </div>
@@ -434,9 +435,9 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
                 {relatedNodes.length > 12 && (
                   <span className="text-[10px] text-[color:var(--muted)]">+{relatedNodes.length - 12} more</span>
                 )}
-              </div>
-            </div>
-          )}
+          </div>
+        </div>
+      )}
         </div>
       )}
     </div>
