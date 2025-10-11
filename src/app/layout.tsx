@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "HU$H (Aaron Shier) — Resume",
+  title: "Aaron Shier | Senior Developer & Creative Engineer",
   description:
     "Engineer-artist who unfolds solutions where there’s no template—and ships them reliable.",
 };
