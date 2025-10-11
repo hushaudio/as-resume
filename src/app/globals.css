@@ -1,15 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --color-background: #0a0b0f;
-  --color-foreground: #e6eef6;
-  --muted: #9aa4b2;
-  --accent: #7dd3fc;
+  /* Theme: green, brown, blue */
+  --color-background: #0b0f0c; /* deep near-black with green tint */
+  --color-foreground: #e8f1ea; /* subtle greenish white */
+  --muted: #9aa79c; /* green-gray */
+  --accent: #60a5fa; /* blue */
+  --accent-green: #86efac; /* green */
+  --accent-brown: #d78736; /* brown (earthy) */
 }
 
 @layer utilities {
   .text-muted-foreground { color: var(--muted) }
   .text-accent { color: var(--accent) }
+  .text-accent-green { color: var(--accent-green) }
+  .text-accent-brown { color: var(--accent-brown) }
 }
 
 html,body { height:100% }

@@ -1,9 +1,10 @@
 import InteractiveScene, { type GraphNode, type GraphLink } from "@/components/InteractiveScene";
+import AudioverseVideoLink from "@/components/AudioverseVideoLink";
 
 const data = {
-  name: "HU$H (Aaron Shier)",
-  tagline:
-    "Engineer-artist who unfolds solutions where there’s no template—and ships them reliable.",
+  name: "Aaron Shier",
+  title: "Senior Full-Stack & Creative-Audio Engineer",
+  tagline: "Creative solutions for complex problems.",
   email: "hush@ohshutit.com",
   github: "https://github.com/hushaudio",
   heroCreds: [
@@ -15,60 +16,113 @@ const data = {
     "Iron Man 3",
   ],
   about:
-    "I turn rough needs into dependable tools—rapid prototypes that harden into production. My lane is the overlap of web/app, audio DSP/JUCE, and local-AI.",
+    "I turn my own needs into dependable tools—rapid prototypes that harden into production. My lane: the overlap of web/app, audio DSP/JUCE, and local-AI. When others say ‘not possible,’ I map constraints, build the path, and make it stable enough for stage or scale.",
+  whatIDo: [
+    "Product engineering: building production applications and native tools across web, desktop, and mobile",
+    "AI/ML systems: end-to-end pipelines across audio, text, and video — C++/JUCE, ONNX, Transformers/Hugging Face, local and cloud inference",
+    "Performance & analytics: instrumentation, SEO-aware frontend engineering, performance budgets and Core Web Vitals; practical experience running A/B tests when needed",
+    "Live systems & shows: MIDI/MTC, Max devices, clocking networks, and hardened fail-safe stage rigs",
+  ],
   experience: [
+    {
+      title: "UE5/Game Tech (Consult)",
+      company: "deadmau5 (Oberha5li Studios)",
+      years: "2024–Present",
+      bullets: ["Unblocked TestFlight deployment for Mowingtons."],
+      link: "https://store.steampowered.com/app/2766880/Meowingtons_Simulator/"
+    },
     {
       title: "Founding Engineer",
       company: "Audialab",
-      years: "2023–Present",
+      years: "2024–Present",
       bullets: [
-        "Official Stable Audio Open beta contractor; used early access to lead DeepSampler2.",
-        "Built DeepSampler2 (first text-to-audio-sample VST) and the Python Audialab Engine.",
-        "Created Interloper with embedded ONNX in JUCE; React/Vite UI.",
+        "Designed and built DeepSampler2 (first ever text-to-audio-sample VST).",
+        "Designed and built Audialab Engine desktop application (Python) for local model hosting; hot-swappable community models.",
+        "Designed and built Interloper, working with our incredible team on the ONNX integration (React/Vite + C++/JUCE + embedded ONNX for native AI audio generation).",
       ],
+      link: "https://audialab.com"
     },
     {
       title: "Contract Engineer",
       company: "565 Media",
       years: "2016–Present",
       bullets: [
-        "Modular LP system powering UA for Hungryroot (early stage → ~$1B valuation).",
-        "Continuous A/B, analytics hygiene, SEO, CI/CD; green Core Web Vitals.",
+        "Modular LP system powering UA at scale for Hungryroot (early stage → ~$1B valuation).",
+        "Continuous A/B tests, clean event schemas, SEO-aware React/Next builds, CI/CD; green Web Vitals.",
       ],
-    },
-    {
-      title: "Consulting Engineer",
-      company: "Ric Wake / Caroline Jones",
-      years: "2020–2022",
-      bullets: [
-        "One-person live-looping rig with fail-safe recovery.",
-        "Max devices + MTC clocking with Nir Z.",
-      ],
-    },
-    {
-      title: "UE5/Game Tech (Consult)",
-      company: "deadmau5",
-      years: "2024–Present",
-      bullets: ["Unblocked TestFlight; documented release path; ongoing advisement."],
+      link: "https://565media.com"
     },
     {
       title: "Founder/Engineer",
       company: "Iowa COVID County Tracker",
       years: "2020",
-      bullets: ["County-level dashboards; local press coverage."],
+      bullets: ["County-level dashboards from state data; covered by Southeast Iowa Union."],
+      link: "https://www.southeastiowaunion.com/news/fairfield-man-designs-app-to-track-covid/"
     },
+    {
+      title: "Consulting Engineer",
+      company: "Ric Wake / RB-360",
+      years: "2016–2019",
+      bullets: [
+        "One-person on-stage live-looping rig with fail-safe recovery.",
+        "Max for Live devices + tight sync to Nir Z via MTC and networked clocking.",
+      ],
+      link: "https://www.rb360.com/"
+    },
+    {
+      title: "Full-Stack Engineer",
+      company: "OneShotMove",
+      years: "2018",
+      bullets: [
+        "Booking + instant quoting + payments: Google Maps mileage → live quote → checkout.",
+        "Google Calendar availability integration; ops rules; #1 Yelp in Los Angeles (2018).",
+      ],
+      link: "https://oneshotmove.com"
+    },
+  ],
+  accomplishments: [
+    "Stable Audio Open official beta contractor (early access) → informed and accelerated DeepSampler2.",
+    "Hungryroot growth: high-converting LPs and analytics stack that scaled paid acquisition.",
+    "‘Not possible’ → shipped: live-looping performance system delivered as a working prototype in one week.",
+    "Press/Credits (selected): Iron Man 3 soundtrack credit; Southeast Iowa Union feature.",
+    "Signed to Strange Music (Tech N9ne) with releases/features — leveraged to open technical collaborations.",
   ],
   projects: [
     "DeepSampler2 — first text→audio-sample VST",
     "Interloper — JUCE/ONNX embedded generator",
     "Audialab Engine — local Python AI host",
+    "The Audioverse — decentralized streaming platform",
     "The Oracle — Swiss Ephemeris app (pre-launch)",
   ],
+  // Detailed projects for page rendering (graph uses projects above)
+  projectsDetailed: [
+    {
+      title: "The Audioverse — decentralized streaming platform",
+      date: "2022",
+      bullets: [
+        "Ownership & releases: NFT-inherited class specific to Audioverse releases; platform-defined API/standard.",
+        "Storage/streaming: audio chunked to IPFS; public/private files with encryption.",
+        "Oracle: 'The Crossroads' computed sales to produce real-time charts.",
+        "Mobile app (React Native): wallet support, WatermelonDB local store; ENS user profiles; QR sharing to purchase flows.",
+        (
+          <span key="audioverse-video">
+            <AudioverseVideoLink src="/videos/audioverse.mp4" />
+          </span>
+        ),
+      ],
+    },
+    {
+      title: "The Oracle — Swiss Ephemeris app (pre-launch)",
+      date: "2025",
+      bullets: ["Swiss Ephemeris astrology app; multi-chart workflow."],
+    },
+  ],
   music: [
-    "Strange Music releases with Tech N9ne (feat. Kim Dracula)",
-    "Iron Man 3 soundtrack credit",
-    "Viral Kazoo Kid remix; SiriusXM remixes",
-    "Produced Orgy — 'Talk Sick'",
+    "Strange Music colaboration release BLIGHT with Tech N9ne",
+    "Producer credits for 'Wondergirls - Lets go all the way' in Iron Man 3 soundtrack",
+    "Music production for the viral video 'Kazoo Kid' remix (with Mike Diva)",
+    "Multiple charting SiriusXM BPM remixes",
+    "Producer credits for Orgy — 'Talk Sick', 'Monster in Me'",
   ],
   skills: [
     "React",
@@ -81,18 +135,24 @@ const data = {
     "C++",
     "JUCE",
     "DSP",
+    "Max for Live",
     "MIDI/MTC",
     "ONNX",
-    "Unreal 5",
+    "Unreal Engine 5",
     "Docker",
     "Nginx",
     "CI/CD",
-    "A/B",
-    "CRO",
     "C#",
+    "Shopify API",
+    "Neo4j",
+    "SQL",
     "PHP",
     "Solidity",
+    "transformers",
+    "AI Infrastructure",
   ],
+  oneLiner:
+    "Nothing is impossible, some things just haven't been developed yet.",
 } as const;
 
 export default function Home() {
@@ -145,12 +205,12 @@ export default function Home() {
       addLink("person", pid);
     }
 
-    // Music
-    for (const m of data.music) {
-      const mid = `music:${slug(m)}`;
-      addNode(mid, m, "music");
-      addLink("person", mid);
-    }
+      // Creative highlights (Music)
+      for (const m of data.music) {
+        const mid = `music:${slug(m)}`;
+        addNode(mid, m, "music");
+        addLink("person", mid);
+      }
 
     // Skills
     for (const s of data.skills) {
@@ -164,14 +224,16 @@ export default function Home() {
       experience: [
         { key: "Founding Engineer — Audialab", skills: ["Python", "C++", "JUCE", "DSP", "ONNX", "React", "TypeScript"] },
         { key: "Contract Engineer — 565 Media", skills: ["React", "Next.js", "Node.js", "CI/CD", "A/B", "CRO", "Nginx", "Docker", "TypeScript"] },
+        { key: "Full-Stack Engineer — OneShotMove", skills: ["React", "Next.js", "Node.js", "TypeScript", "CI/CD"] },
         { key: "Consulting Engineer — Ric Wake / Caroline Jones", skills: ["JUCE", "DSP", "MIDI/MTC", "C++"] },
-        { key: "UE5/Game Tech (Consult) — deadmau5", skills: ["Unreal 5"] },
+        { key: "UE5/Game Tech (Consult) — deadmau5", skills: ["Unreal Engine 5"] },
         { key: "Founder/Engineer — Iowa COVID County Tracker", skills: ["React", "Next.js", "TypeScript", "Node.js", "CI/CD"] },
       ],
       projects: [
         { key: "DeepSampler2 — first text→audio-sample VST", skills: ["C++", "JUCE", "DSP", "ONNX", "React", "TypeScript"] },
         { key: "Interloper — JUCE/ONNX embedded generator", skills: ["C++", "JUCE", "ONNX", "DSP"] },
         { key: "Audialab Engine — local Python AI host", skills: ["Python", "ONNX", "Docker"] },
+        { key: "The Audioverse — decentralized streaming platform", skills: ["React Native", "Node.js", "TypeScript", "Solidity", "CI/CD"] },
         { key: "The Oracle — Swiss Ephemeris app (pre-launch)", skills: ["React", "Next.js", "TypeScript", "Node.js"] },
       ],
       creds: [
@@ -179,7 +241,7 @@ export default function Home() {
         { cred: "Strange Music", targets: ["Strange Music releases with Tech N9ne (feat. Kim Dracula)"] },
         { cred: "Hungryroot", targets: ["Contract Engineer — 565 Media"] },
         { cred: "deadmau5", targets: ["UE5/Game Tech (Consult) — deadmau5"] },
-        { cred: "Ric Wake / Caroline Jones", targets: ["Consulting Engineer — Ric Wake / Caroline Jones"] },
+        { cred: "Ric Wake / RB-360", targets: ["Consulting Engineer — Ric Wake / Caroline Jones"] },
         { cred: "Iron Man 3", targets: ["Iron Man 3 soundtrack credit"] },
       ],
     } as const;
@@ -225,21 +287,22 @@ export default function Home() {
       <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-semibold">{data.name}</h1>
+          <p className="text-sm">{data.title}</p>
           <p className="text-sm text-muted-foreground">{data.tagline}</p>
-          <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
+          {/* <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
             {data.heroCreds.map((c) => (
               <span
                 key={c}
-                className="inline-flex items-center rounded-full bg-white/5 px-2 py-0.5 ring-1 ring-white/10"
+                className="inline-flex items-center rounded-full bg-white/5 px-2 py-0.5 ring-1 ring-white/10 text-accent-green"
               >
                 {c}
               </span>
             ))}
-          </div>
+          </div> */}
         </div>
         <div className="text-sm">
           <div>
-            <a className="text-accent" href={`mailto:${data.email}`}>
+            <a className="text-accent-green" href={`mailto:${data.email}`}>
               {data.email}
             </a>
           </div>
@@ -257,19 +320,33 @@ export default function Home() {
       </header>
 
       <section className="mt-8">
-        <h2 className="text-xl font-medium">About</h2>
+        <h2 className="text-xl font-medium text-accent-brown">Summary</h2>
         <p className="mt-2">{data.about}</p>
+        {data.oneLiner && (
+          <p className="mt-2 text-sm text-muted-foreground">{data.oneLiner}</p>
+        )}
       </section>
 
       <section className="mt-8">
-        <h2 className="text-xl font-medium">Experience</h2>
+        <h2 className="text-xl font-medium text-accent-green">Core Competencies</h2>
+        <ul className="list-disc ml-5 mt-4">
+          {data.whatIDo.map((w, i) => (
+            <li className="mb-4" key={i}>{w}</li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="mt-8">
+        <h2 className="text-xl font-medium text-accent">Experience</h2>
         <div className="mt-4 space-y-6">
           {data.experience.map((role) => (
             <article key={`${role.title}-${role.company}`}>
-              <h3 className="font-semibold">
-                {role.title} — {role.company}
-              </h3>
-              <p className="text-sm text-muted-foreground">{role.years}</p>
+              <div className="flex items-start gap-4">
+                <div className="border-l-2 pl-3" style={{ borderColor: 'var(--accent)' }}>
+                  <h3 className="font-semibold mb-0">{role.title} — {role.company}</h3>
+                  <p className="text-sm text-muted-foreground mt-1">{role.years}</p>
+                </div>
+              </div>
               <ul className="list-disc ml-5 mt-2">
                 {role.bullets.map((b, i) => (
                   <li key={i}>{b}</li>
@@ -281,30 +358,63 @@ export default function Home() {
       </section>
 
       <section className="mt-8">
-        <h2 className="text-xl font-medium">Projects</h2>
+        <h2 className="text-xl font-medium text-accent-brown">Projects</h2>
+        {Array.isArray((data as any).projectsDetailed) ? (
+          <div className="mt-4 space-y-6">
+            {(data as any).projectsDetailed.map((p: { title: string; date?: string; bullets: string[] }, idx: number) => (
+              <article key={idx}>
+                <div className="border-l-2 pl-3" style={{ borderColor: 'var(--accent-brown)' }}>
+                  <h3 className="font-semibold">{p.title}</h3>
+                  {p.date && <p className="text-sm text-muted-foreground mt-1">({p.date})</p>}
+                </div>
+                {p.bullets?.length > 0 && (
+                  <ul className="list-disc ml-5 mt-2">
+                    {p.bullets.map((b, bi) => (
+                      <li key={bi}>{b}</li>
+                    ))}
+                  </ul>
+                )}
+              </article>
+            ))}
+          </div>
+        ) : (
+          <ul className="list-disc ml-5 mt-4">
+            {data.projects.map((p, i) => (
+              <li key={i}>{p}</li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {/* <section className="mt-8">
+        <h2 className="text-xl font-medium text-accent-green">Achievements</h2>
         <ul className="list-disc ml-5 mt-4">
-          {data.projects.map((p, i) => (
-            <li key={i}>{p}</li>
+          {data.accomplishments.map((a, i) => (
+            <li key={i}>{a}</li>
           ))}
         </ul>
+      </section> */}
+
+      <section className="mt-8">
+        <details className="text-sm text-muted-foreground">
+          <summary className="cursor-pointer">Creative credits (optional)</summary>
+          <ul className="list-disc ml-5 mt-2">
+            {data.music.map((m, i) => (
+              <li key={i}>{m}</li>
+            ))}
+          </ul>
+        </details>
       </section>
 
       <section className="mt-8">
-        <h2 className="text-xl font-medium">Music</h2>
-        <ul className="list-disc ml-5 mt-4">
-          {data.music.map((m, i) => (
-            <li key={i}>{m}</li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="mt-8">
-        <h2 className="text-xl font-medium">Skills</h2>
+        <h2 className="text-xl font-medium text-accent-brown">Skills</h2>
         <p className="mt-2">{data.skills.join(" · ")}</p>
       </section>
 
+      {/* One-liner integrated into Summary; section removed for professional tone */}
+
       <section className="mt-10">
-        <h2 className="text-xl font-medium">Interactive</h2>
+        <h2 className="text-xl font-medium text-accent">Interactive</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           Knowledge graph of this resume. Click a node to explore related items.
         </p>
