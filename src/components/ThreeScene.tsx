@@ -173,7 +173,50 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
         }
       }
       pointGeo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-      const pointMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.12, sizeAttenuation: true });
+      
+      // Color array for nodes based on type
+      const colors: number[] = [];
+      const getNodeColor = (name: string, fallback: number) => {
+        const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        if (!v) return fallback;
+        const c = new THREE.Color(v);
+        return c;
+      };
+      
+      const accentBrown = getNodeColor("--accent-brown", 0x8b6b4a);
+      const accentBlue = getNodeColor("--accent", 0x3b82f6);
+      const accentGreen = getNodeColor("--accent-green", 0x22c55e);
+      const red = new THREE.Color(0xff0000);
+      const white = new THREE.Color(0xffffff);
+      
+      for (let i = 0; i < indexToId.length; i++) {
+        const id = indexToId[i];
+        const node = nodeById.get(id);
+        let color = white;
+        
+        if (node) {
+          // Check if it's a Tech N9ne related project (music node)
+          if (node.type === "music" && node.label.toLowerCase().includes("tech n9ne")) {
+            color = red;
+          } else if (node.type === "company" || node.type === "cred") {
+            // Companies and credentials (which include companies) = brown
+            color = accentBrown;
+          } else if (node.type === "role" || node.type === "experience") {
+            color = accentBlue;
+          } else if (node.type === "skill") {
+            color = accentGreen;
+          }
+        }
+        
+        colors.push(color.r, color.g, color.b);
+      }
+      
+      pointGeo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+      const pointMat = new THREE.PointsMaterial({ 
+        size: 0.12, 
+        sizeAttenuation: true,
+        vertexColors: true
+      });
       const points = new THREE.Points(pointGeo, pointMat);
       scene.add(points);
 
@@ -211,7 +254,7 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
       const ndc = new THREE.Vector2();
       let isDragging = false;
       const onPointerMove = (ev: PointerEvent) => {
-        if (isDragging) { setHover(null); return; }
+        if (isDragging) { setHover(null); isHoveringLabelRef.current = false; return; }
         const rect = renderer.domElement.getBoundingClientRect();
         const cx = ev.clientX - rect.left;
         const cy = ev.clientY - rect.top;
@@ -226,13 +269,15 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
             const node = idToIndex.has(id) ? nodeById.get(id!) : undefined;
             if (node) {
               setHover({ id: node.id, label: node.label, type: node.type, x: cx, y: cy });
+              isHoveringLabelRef.current = true;
               renderer.domElement.style.cursor = "pointer";
               return;
             }
           }
         }
         renderer.domElement.style.cursor = "grab";
-          setHover(null);
+        isHoveringLabelRef.current = false;
+        setHover(null);
       };
       const onPointerLeave = () => { setHover(null); renderer.domElement.style.cursor = "grab"; };
       const onPointerEnter = () => { isHoveringCanvasRef.current = true; };
@@ -243,7 +288,7 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
       renderer.domElement.addEventListener("pointerleave", onPointerLeave);
       renderer.domElement.addEventListener("pointerenter", onPointerEnter);
       renderer.domElement.addEventListener("pointerleave", onPointerLeaveCanvas);
-      controls.addEventListener("start", () => { isDragging = true; setHover(null); });
+      controls.addEventListener("start", () => { isDragging = true; setHover(null); isHoveringLabelRef.current = false; });
       controls.addEventListener("end", () => { isDragging = false; });
 
       let raf = 0;
@@ -263,30 +308,26 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
       const maxPhi = Math.PI - 0.01;
 
       const animate = () => {
-        controls.update();
-
         // Smoothly ease rotation speed based on hover/dragging state
         // Stop rotation when hovering over canvas OR text labels, or when dragging
         const targetSpeed = (!isHoveringCanvasRef.current && !isHoveringLabelRef.current && !isDragging) ? targetRotationSpeed : 0;
         currentRotationSpeed += (targetSpeed - currentRotationSpeed) * easingFactor;
 
-        // Apply rotation if speed is above threshold
-        const toCam = camera.position.clone().sub(controls.target);
-        spherical.setFromVector3(toCam);
-
         const nowActive = Math.abs(currentRotationSpeed) > 0.00001;
-        if (nowActive && !autoRotating) {
-          // Starting auto-rotation: align baseline to avoid vertical jump
-          const currentDesiredOffset = Math.sin(verticalPhase) * verticalAmplitude;
-          basePhi = clamp(spherical.phi - currentDesiredOffset, minPhi, maxPhi);
-          autoRotating = true;
-        }
-        if (!nowActive && autoRotating) {
-          // Stopping auto-rotation: keep camera where it is
-          autoRotating = false;
-        }
+        
+        // Only apply auto-rotation if active
+        if (nowActive && !isDragging) {
+          // Get current camera position in spherical coords
+          const toCam = camera.position.clone().sub(controls.target);
+          spherical.setFromVector3(toCam);
 
-        if (nowActive) {
+          if (!autoRotating) {
+            // Starting auto-rotation: align baseline to avoid vertical jump
+            const currentDesiredOffset = Math.sin(verticalPhase) * verticalAmplitude;
+            basePhi = clamp(spherical.phi - currentDesiredOffset, minPhi, maxPhi);
+            autoRotating = true;
+          }
+
           // Horizontal azimuthal rotation (theta around Y axis)
           spherical.theta += currentRotationSpeed;
 
@@ -299,7 +340,13 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
           tempVec.setFromSpherical(spherical);
           camera.position.copy(controls.target).add(tempVec);
           camera.lookAt(controls.target);
+        } else if (autoRotating) {
+          // Stopping auto-rotation: keep camera where it is
+          autoRotating = false;
         }
+
+        // Update controls AFTER auto-rotation (if any)
+        controls.update();
 
         renderer.render(scene, camera);
         
