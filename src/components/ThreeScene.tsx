@@ -1,231 +1,168 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
+import type { GraphData } from "@/components/InteractiveScene";
 
-type ThreeModule = typeof import("three");
-
-export type ThreeSceneProps = {
-  className?: string;
-  /**
-   * Clamp device pixel ratio to reduce GPU work.
-   * Example: [1, 2] caps DPR between 1 and 2.
-   */
-  dpr?: [min: number, max: number];
-  /**
-   * Hint for the GPU power selection.
-   * Use 'low-power' to avoid dGPU on laptops.
-   */
-  powerPreference?: WebGLPowerPreference;
-  /** Transparent canvas by default to avoid paint cost. */
-  transparent?: boolean;
-};
-
-/**
- * A lightweight, lazy-initialized Three.js scene optimized for PageSpeed.
- * - Loads Three only on the client, only when visible.
- * - Respects reduced motion, pauses when tab is hidden, and disposes on unmount.
- * - Clamps DPR to keep GPU work in check on high-DPI displays.
- */
-export default function ThreeScene({
-  className,
-  dpr = [1, 2],
-  powerPreference = "low-power",
-  transparent = true,
-}: ThreeSceneProps) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const [visible, setVisible] = useState(false);
+export default function ThreeScene({ graph }: { graph: GraphData }) {
+  const ref = useRef<HTMLDivElement | null>(null);
   const [ready, setReady] = useState(false);
 
-  // Defer initialization until in-viewport.
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setVisible(true);
-            observer.disconnect();
-            break;
-          }
-        }
-      },
-      { root: null, threshold: 0.1 }
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
+  // Flatten nodes and links into simple arrays for minimal Three init
+  const memo = useMemo(() => ({ nodes: graph.nodes, links: graph.links }), [graph]);
 
   useEffect(() => {
-    if (!visible || ready) return;
-
-    let three: ThreeModule | null = null;
     let disposed = false;
-    let animationFrame = 0;
-    let width = 0;
-    let height = 0;
+    let cleanup: (() => void) | null = null;
 
-    const prefersReducedMotion =
-      typeof window !== "undefined" &&
-      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    (async () => {
+      const THREE = await import("three");
+      const { OrbitControls } = await import("three/examples/jsm/controls/OrbitControls.js");
 
-    // Avoid heavy work on very low-memory devices.
-    const navWithMem = navigator as Navigator & { deviceMemory?: number };
-    const deviceMemory = typeof navWithMem.deviceMemory === "number" ? navWithMem.deviceMemory : undefined;
-    if (deviceMemory && deviceMemory < 2) {
-      // Render a static fallback (no WebGL) by simply returning.
-      return;
-    }
-
-    const init = async () => {
-      try {
-        three = await import("three");
-      } catch {
-        // If dynamic import fails, do nothing gracefully.
-        return;
-      }
       if (disposed) return;
+      const el = ref.current;
+      if (!el) return;
 
-      const el = containerRef.current!;
-      const {
-        Scene,
-        PerspectiveCamera,
-        WebGLRenderer,
-        BoxGeometry,
-        Mesh,
-        MeshNormalMaterial,
-        Color,
-        ACESFilmicToneMapping,
-        SRGBColorSpace,
-        Clock,
-      } = three!;
-
-      const scene = new Scene();
-      if (!transparent) {
-        scene.background = new Color(0x000000);
-      }
-
-      const camera = new PerspectiveCamera(60, 1, 0.1, 100);
-      camera.position.set(2, 1.5, 3);
-
-      const renderer = new WebGLRenderer({
-        antialias: false,
-        alpha: transparent,
-        powerPreference,
-        canvas: undefined,
-      });
-      renderer.toneMapping = ACESFilmicToneMapping;
-      renderer.outputColorSpace = SRGBColorSpace;
-
-      // Clamp DPR to avoid overdraw on hi-DPI.
-      const minDPR = Math.max(0.75, dpr[0]);
-      const maxDPR = Math.min(2.0, dpr[1]);
-      const deviceDPR = Math.min(maxDPR, Math.max(minDPR, window.devicePixelRatio || 1));
-      renderer.setPixelRatio(deviceDPR);
-
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 100);
+      camera.position.set(0, 0, 8);
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       el.appendChild(renderer.domElement);
 
-      // Simple content: a small rotating cube.
-      const cube = new Mesh(new BoxGeometry(1, 1, 1), new MeshNormalMaterial());
-      scene.add(cube);
-
-      const clock = new Clock();
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.08;
+      controls.minDistance = 2;
+      controls.maxDistance = 18;
 
       const resize = () => {
-        if (!el) return;
-        const rect = el.getBoundingClientRect();
-        width = Math.max(1, Math.floor(rect.width));
-        height = Math.max(1, Math.floor(rect.height));
-        camera.aspect = width / height;
+        const r = el.getBoundingClientRect();
+        const w = Math.max(1, Math.floor(r.width));
+        const h = Math.max(1, Math.floor(r.height));
+        renderer.setSize(w, h, false);
+        camera.aspect = w / h;
         camera.updateProjectionMatrix();
-        renderer.setSize(width, height, false);
       };
       resize();
+      window.addEventListener("resize", resize);
 
-      let paused = document.visibilityState === "hidden" || prefersReducedMotion;
+      // Build points on spherical shells around a center node (the person)
+      const pointGeo = new THREE.BufferGeometry();
+      const positions: number[] = [];
+      const idToIndex = new Map<string, number>();
 
-      const onVisibility = () => {
-        paused = document.visibilityState === "hidden" || prefersReducedMotion;
-        if (!paused) loop();
+      const center = memo.nodes.find((n) => n.type === ("person" as any));
+      const others = memo.nodes.filter((n) => n !== center);
+
+      // Helper: fibonacci sphere distribution on radius r
+      const fibonacciSphere = (count: number, r: number) => {
+        const pts: Array<[number, number, number]> = [];
+        if (count <= 0) return pts;
+        if (count === 1) return [[0, 0, r]]; // arbitrary pole
+        const golden = Math.PI * (3 - Math.sqrt(5)); // ~2.39996
+        for (let i = 0; i < count; i++) {
+          const y = 1 - (i / (count - 1)) * 2; // 1..-1
+          const radius = Math.sqrt(Math.max(0, 1 - y * y));
+          const theta = golden * i;
+          const x = Math.cos(theta) * radius;
+          const z = Math.sin(theta) * radius;
+          pts.push([x * r, y * r, z * r]);
+        }
+        return pts;
       };
-      document.addEventListener("visibilitychange", onVisibility);
 
-      const loop = () => {
-        if (disposed || paused) return;
-        const t = clock.getElapsedTime();
-        cube.rotation.x = t * 0.6;
-        cube.rotation.y = t * 0.4;
-        renderer.render(scene, camera);
-        animationFrame = requestAnimationFrame(loop);
-      };
+      // Group nodes by type and choose shell radii
+      const typeToRadius: Record<string, number> = {
+        cred: 1.6,
+        experience: 2.4,
+        company: 2.4,
+        project: 3.0,
+        music: 3.0,
+        skill: 3.8,
+        person: 0,
+      } as const as Record<string, number>;
 
-      const onResize = () => resize();
-      window.addEventListener("resize", onResize, { passive: true });
-
-      if (prefersReducedMotion) {
-        // Render a single static frame.
-        renderer.render(scene, camera);
-      } else if (document.visibilityState !== "hidden") {
-        loop();
+      const groups = new Map<string, typeof others>();
+      for (const n of others) {
+        const arr = groups.get(n.type as string) || [];
+        arr.push(n as any);
+        groups.set(n.type as string, arr);
       }
 
+      // Add center first at origin so it indexes to 0 (optional)
+      if (center) {
+        idToIndex.set(center.id, positions.length / 3);
+        positions.push(0, 0, 0);
+      }
+
+      // For each group, scatter on its spherical shell
+      for (const [type, arr] of groups) {
+        const r = typeToRadius[type] ?? 3.0;
+        const pts = fibonacciSphere(arr.length, r);
+        for (let i = 0; i < arr.length; i++) {
+          const [x, y, z] = pts[i];
+          idToIndex.set(arr[i].id, positions.length / 3);
+          positions.push(x, y, z);
+        }
+      }
+      pointGeo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+      const pointMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.06, sizeAttenuation: true });
+      const points = new THREE.Points(pointGeo, pointMat);
+      scene.add(points);
+
+      // Lines for links
+      const linePositions: number[] = [];
+      for (const l of memo.links) {
+        const ai = idToIndex.get(l.source);
+        const bi = idToIndex.get(l.target);
+        if (ai == null || bi == null) continue;
+        const a3 = ai * 3;
+        const b3 = bi * 3;
+        linePositions.push(
+          positions[a3], positions[a3 + 1], positions[a3 + 2],
+          positions[b3], positions[b3 + 1], positions[b3 + 2]
+        );
+      }
+      const lineGeo = new THREE.BufferGeometry();
+      lineGeo.setAttribute("position", new THREE.Float32BufferAttribute(linePositions, 3));
+      const lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.15 });
+      const lines = new THREE.LineSegments(lineGeo, lineMat);
+      scene.add(lines);
+
+      let raf = 0;
+      const animate = () => {
+        controls.update();
+        renderer.render(scene, camera);
+        raf = requestAnimationFrame(animate);
+      };
+      animate();
       setReady(true);
 
-      // Cleanup on unmount
-      return () => {
-        disposed = true;
-        cancelAnimationFrame(animationFrame);
-        window.removeEventListener("resize", onResize);
-        document.removeEventListener("visibilitychange", onVisibility);
-
-        // Dispose geometry/materials to free GPU memory.
-        cube.geometry.dispose();
-        if (Array.isArray(cube.material)) cube.material.forEach((m) => m.dispose());
-        else cube.material.dispose();
+      cleanup = () => {
+        cancelAnimationFrame(raf);
+        window.removeEventListener("resize", resize);
         scene.clear();
+        pointGeo.dispose();
+        lineGeo.dispose();
+        (pointMat as any).dispose?.();
+        (lineMat as any).dispose?.();
         renderer.dispose();
-        renderer.forceContextLoss?.();
         renderer.domElement?.remove();
       };
-    };
-
-    const cleanupPromise = init();
+    })();
 
     return () => {
       disposed = true;
-      if (typeof cleanupPromise === "function") cleanupPromise();
+      cleanup?.();
     };
-  }, [visible, ready, dpr, powerPreference, transparent]);
+  }, [memo]);
 
   return (
-    <div
-      ref={containerRef}
-      className={
-        [
-          // Reserve space to avoid CLS and keep LCP fast.
-          "relative w-full aspect-[16/9] overflow-hidden rounded-xl",
-          "bg-white/5 ring-1 ring-white/10",
-          className ?? "",
-        ]
-          .filter(Boolean)
-          .join(" ")
-      }
-      aria-label="Decorative 3D scene"
-      role="img"
-    >
+    <div ref={ref} className="relative w-full h-full">
       {!ready && (
-        <div className="absolute inset-0 grid place-items-center text-sm text-[color:var(--muted)]">
-          Loading 3D…
-        </div>
+        <div className="absolute inset-0 grid place-items-center text-sm text-[color:var(--muted)]">Preparing 3D…</div>
       )}
-      {/* Canvas is injected by Three at runtime */}
-      <noscript>
-        <div className="absolute inset-0 grid place-items-center text-sm text-[color:var(--muted)]">
-          Enable JavaScript to view the 3D scene.
-        </div>
-      </noscript>
     </div>
   );
 }
+
+

@@ -13,8 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Aaron Shier — Resume",
-  description: "Resume of Aaron Shier",
+  title: "HU$H (Aaron Shier) — Resume",
+  description:
+    "Engineer-artist who unfolds solutions where there’s no template—and ships them reliable.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
