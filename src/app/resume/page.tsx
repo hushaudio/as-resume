@@ -166,7 +166,7 @@ const data = {
 
 export default function Resume() {
   return (
-    <main className="prose prose-invert mx-auto max-w-3xl mt-18">
+    <main className="prose prose-invert mx-auto max-w-3xl mt-18 px-4">
       <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-semibold">{data.name}</h1>

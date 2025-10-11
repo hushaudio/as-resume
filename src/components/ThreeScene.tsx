@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useMemo } from "react";
+import MobileTooltip from "./MobileTooltip";
 import type { GraphData } from "@/components/InteractiveScene";
 
 export default function ThreeScene({ graph }: { graph: GraphData }) {
@@ -12,7 +13,41 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
   );
   const isHoveringCanvasRef = useRef(false);
   const isHoveringLabelRef = useRef(false);
-
+  const [mobileAnchor, setMobileAnchor] = useState<null | "top" | "bottom">(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileSelectedId, setMobileSelectedId] = useState<string | null>(null);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const isTouchRef = useRef(false);
+  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string>('');
+  
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const hasTouch = 'ontouchstart' in window || (navigator as any).maxTouchPoints > 0 || window.matchMedia('(hover: none)').matches;
+      setIsTouchDevice(!!hasTouch);
+      setDebugInfo(`Touch: ${hasTouch}, maxTouchPoints: ${(navigator as any).maxTouchPoints}, ontouchstart: ${'ontouchstart' in window}, hover: ${window.matchMedia('(hover: none)').matches}`);
+    } catch (e) { 
+      setIsTouchDevice(false); 
+      setDebugInfo(`Error: ${e}`);
+    }
+  }, []);
+  useEffect(() => {
+    isTouchRef.current = isTouchDevice;
+  }, [isTouchDevice]);
+  // Prevent page scrolling when mobile tooltip is open
+  useEffect(() => {
+    if (!isTouchDevice) return;
+    const prevOverflow = typeof document !== 'undefined' ? document.body.style.overflow : '';
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = prevOverflow;
+    }
+    return () => {
+      if (typeof document !== 'undefined') document.body.style.overflow = prevOverflow;
+    };
+  }, [mobileOpen, isTouchDevice]);
   // Flatten nodes and links into simple arrays for minimal Three init
   const memo = useMemo(() => ({ nodes: graph.nodes, links: graph.links }), [graph]);
 
@@ -33,6 +68,10 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
       camera.position.set(0, 0, 22);
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       el.appendChild(renderer.domElement);
+      // Prevent text selection / native gestures on canvas
+      (renderer.domElement.style as any).userSelect = 'none';
+      (renderer.domElement.style as any).webkitUserSelect = 'none';
+      (renderer.domElement.style as any).touchAction = 'none';
 
       const controls = new OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
@@ -189,11 +228,12 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
       
       // Color array for nodes based on type
       const colors: number[] = [];
-      const getNodeColor = (name: string, fallback: number) => {
+      const getNodeColor = (name: string, fallbackHex: number) => {
         const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-        if (!v) return fallback;
-        const c = new THREE.Color(v);
-        return c;
+        if (v) {
+          try { return new THREE.Color(v as any); } catch {}
+        }
+        return new THREE.Color(fallbackHex);
       };
       
       const accentBrown = getNodeColor("--accent-brown", 0x8b6b4a);
@@ -260,17 +300,20 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
       const lines = new THREE.LineSegments(lineGeo, lineMat);
       scene.add(lines);
 
-      // Hover picking
+      // Hover/tap picking
       const raycaster = new THREE.Raycaster();
-      // pick radius in world units; tuned for our point size
-      (raycaster.params as any).Points = { threshold: 0.12 };
+      // Dynamic pick radius - much larger on touch for easier hits
+      const updatePickThreshold = () => {
+        const threshold = isTouchRef.current ? 0.25 : 0.12;
+        (raycaster.params as any).Points = { threshold };
+      };
+      updatePickThreshold();
       const ndc = new THREE.Vector2();
       let isDragging = false;
-      const onPointerMove = (ev: PointerEvent) => {
-        if (isDragging) { setHover(null); isHoveringLabelRef.current = false; return; }
+      const selectNodeAt = (clientX: number, clientY: number) => {
         const rect = renderer.domElement.getBoundingClientRect();
-        const cx = ev.clientX - rect.left;
-        const cy = ev.clientY - rect.top;
+        const cx = clientX - rect.left;
+        const cy = clientY - rect.top;
         ndc.x = (cx / rect.width) * 2 - 1;
         ndc.y = -(cy / rect.height) * 2 + 1;
         raycaster.setFromCamera(ndc, camera);
@@ -282,25 +325,115 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
             const node = idToIndex.has(id) ? nodeById.get(id!) : undefined;
             if (node) {
               setHover({ id: node.id, label: node.label, type: node.type, x: cx, y: cy });
-              isHoveringLabelRef.current = true;
-              renderer.domElement.style.cursor = "pointer";
-              return;
+              return node.id;
             }
           }
         }
+        return null;
+      };
+
+      const onPointerMove = (ev: PointerEvent) => {
+        // Ignore hover logic on touch devices to avoid flicker/clearing selection
+        if (isTouchRef.current) return;
+        if (isDragging) { setHover(null); isHoveringLabelRef.current = false; return; }
+        const rect = renderer.domElement.getBoundingClientRect();
+        const cx = ev.clientX - rect.left;
+        const cy = ev.clientY - rect.top;
+        const hitId = selectNodeAt(ev.clientX, ev.clientY);
+        if (hitId) { isHoveringLabelRef.current = true; renderer.domElement.style.cursor = "pointer"; return; }
         renderer.domElement.style.cursor = "grab";
         isHoveringLabelRef.current = false;
         setHover(null);
+      };
+      // Touch tap handling for mobile: toggle MobileTooltip anchored to top/bottom
+      const onPointerDown = (ev: PointerEvent) => {
+        const isTouch = ev.pointerType === 'touch' || (typeof window !== 'undefined' && window.matchMedia('(hover: none)').matches);
+        if (!isTouch) return;
+        // Record start to distinguish tap vs drag; do not block OrbitControls
+        touchStartRef.current = { x: ev.clientX, y: ev.clientY, time: performance.now() };
+      };
+
+      const onPointerUp = (ev: PointerEvent) => {
+        const isTouch = ev.pointerType === 'touch' || (typeof window !== 'undefined' && window.matchMedia('(hover: none)').matches);
+        if (!isTouch) return;
+        const start = touchStartRef.current;
+        touchStartRef.current = null;
+        if (!start) return;
+        const dx = ev.clientX - start.x;
+        const dy = ev.clientY - start.y;
+        const distSq = dx * dx + dy * dy;
+        const dt = performance.now() - start.time;
+        const TAP_MAX_DIST_SQ = 15 * 15; // More forgiving threshold
+        const TAP_MAX_DT = 500; // More time for slower taps
+        if (distSq > TAP_MAX_DIST_SQ || dt > TAP_MAX_DT) {
+          // Treat as drag; do nothing so OrbitControls handles it
+          return;
+        }
+
+        // Force update pick threshold with live ref value
+        const threshold = isTouchRef.current ? 0.3 : 0.12; // Even larger pick radius
+        (raycaster.params as any).Points = { threshold };
+        
+        const rect = renderer.domElement.getBoundingClientRect();
+        const cy = ev.clientY - rect.top;
+        const vhMid = rect.height / 2;
+        const anchor: "top" | "bottom" = cy > vhMid ? "top" : "bottom";
+        
+        // Direct raycast without calling selectNodeAt to avoid hover side-effects
+        const cx = ev.clientX - rect.left;
+        ndc.x = (cx / rect.width) * 2 - 1;
+        ndc.y = -(cy / rect.height) * 2 + 1;
+        raycaster.setFromCamera(ndc, camera);
+        const hits = raycaster.intersectObject(points, false);
+        
+        let hitId: string | null = null;
+        if (hits.length > 0) {
+          const idx = (hits[0].index ?? -1) as number;
+          if (idx >= 0) {
+            const id = indexToId[idx];
+            if (idToIndex.has(id)) {
+              hitId = id;
+            }
+          }
+        }
+        
+        if (hitId) {
+          const node = nodeById.get(hitId);
+          if (!node) return;
+          
+          // Immediate state update, no batching
+          if (mobileOpen && mobileAnchor === anchor && mobileSelectedId === hitId) {
+            // Close
+            setMobileOpen(false);
+            setMobileAnchor(null);
+            setMobileSelectedId(null);
+            setHover(null);
+          } else {
+            // Open - set all state in one batch
+            setMobileAnchor(anchor);
+            setMobileSelectedId(hitId);
+            setHover({ id: node.id, label: node.label, type: node.type as string, x: cx, y: cy });
+            setMobileOpen(true); // Set open last to ensure other state is ready
+          }
+        } else {
+          // Tapped empty space → close
+          setMobileOpen(false);
+          setMobileAnchor(null);
+          setMobileSelectedId(null);
+          setHover(null);
+        }
       };
       const onPointerLeave = () => { setHover(null); renderer.domElement.style.cursor = "grab"; };
       const onPointerEnter = () => { isHoveringCanvasRef.current = true; };
       const onPointerLeaveCanvas = () => { isHoveringCanvasRef.current = false; };
 
       renderer.domElement.style.cursor = "grab";
-      renderer.domElement.addEventListener("pointermove", onPointerMove);
+      renderer.domElement.addEventListener("pointermove", onPointerMove, { passive: true } as any);
       renderer.domElement.addEventListener("pointerleave", onPointerLeave);
       renderer.domElement.addEventListener("pointerenter", onPointerEnter);
       renderer.domElement.addEventListener("pointerleave", onPointerLeaveCanvas);
+      renderer.domElement.addEventListener('pointerdown', onPointerDown, { passive: true } as any);
+      renderer.domElement.addEventListener('pointerup', onPointerUp, { passive: true } as any);
       controls.addEventListener("start", () => { isDragging = true; setHover(null); isHoveringLabelRef.current = false; });
       controls.addEventListener("end", () => { isDragging = false; });
 
@@ -322,8 +455,11 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
 
       const animate = () => {
         // Smoothly ease rotation speed based on hover/dragging state
+        // Important: Mobile/tablet must NEVER auto-rotate. Use isTouchRef to avoid stale closure state.
         // Stop rotation when hovering over canvas OR text labels, or when dragging
-        const targetSpeed = (!isHoveringCanvasRef.current && !isHoveringLabelRef.current && !isDragging) ? targetRotationSpeed : 0;
+        const targetSpeed = (!isTouchRef.current && !isHoveringCanvasRef.current && !isHoveringLabelRef.current && !isDragging)
+          ? targetRotationSpeed
+          : 0;
         currentRotationSpeed += (targetSpeed - currentRotationSpeed) * easingFactor;
 
         const nowActive = Math.abs(currentRotationSpeed) > 0.00001;
@@ -401,6 +537,8 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
         renderer.domElement.removeEventListener("pointerleave", onPointerLeave);
         renderer.domElement.removeEventListener("pointerenter", onPointerEnter);
         renderer.domElement.removeEventListener("pointerleave", onPointerLeaveCanvas);
+        renderer.domElement.removeEventListener('pointerdown', onPointerDown as any);
+        renderer.domElement.removeEventListener('pointerup', onPointerUp as any);
         scene.clear();
         pointGeo.dispose();
         lineGeo.dispose();
@@ -433,141 +571,188 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
     return memo.nodes.find((n) => n.id === hover.id) || null;
   }, [hover, memo]);
 
+  // Mobile-specific current node derived from mobileSelectedId so tooltip
+  // does not depend on transient `hover` state (which is cleared by pointermove)
+  const mobileCurrentNode = useMemo(() => {
+    if (!mobileSelectedId) return null;
+    return memo.nodes.find((n) => n.id === mobileSelectedId) || null;
+  }, [mobileSelectedId, memo]);
+
+  const mobileRelatedNodes = useMemo(() => {
+    if (!mobileSelectedId) return [];
+    const ids = new Set<string>();
+    for (const l of memo.links) {
+      if (l.source === mobileSelectedId) ids.add(l.target);
+      else if (l.target === mobileSelectedId) ids.add(l.source);
+    }
+    return memo.nodes.filter((n) => ids.has(n.id));
+  }, [mobileSelectedId, memo]);
+
   return (
-    <div ref={ref} className="relative w-full h-full">
+    <div
+      ref={ref}
+      className="relative w-full h-full select-none"
+      style={{ WebkitUserSelect: 'none', userSelect: 'none', WebkitTouchCallout: 'none' as any }}
+    >
+      {/* Debug info */}
+      {debugInfo && (
+        <div className="absolute top-20 left-4 text-xs text-white/60 bg-black/80 p-2 rounded z-50 max-w-xs pointer-events-none">
+          <div>Debug: {debugInfo}</div>
+          <div>isTouchDevice: {String(isTouchDevice)}</div>
+          <div>mobileOpen: {String(mobileOpen)}</div>
+          <div>mobileAnchor: {mobileAnchor || 'null'}</div>
+          <div>hover: {hover?.label || 'null'}</div>
+        </div>
+      )}
+      {/* Tooltip container to keep within viewport */}
+      <TooltipStyles />
       {!ready && (
         <div className="absolute inset-0 grid place-items-center text-sm text-[color:var(--muted)]">Preparing 3D…</div>
       )}
-      
-      {/* Persistent floating labels - always visible, now interactive */}
-      {ready &&
-        labels
-          .filter((l) => l.visible)
-          .map((l) => (
-            <div
-              key={l.id}
-              className="absolute text-[10px] text-white/70 whitespace-nowrap cursor-pointer hover:text-white transition-colors select-none"
-              style={{
-                left: l.x,
-                top: l.y,
-                transform: "translate(-50%, -120%)",
-              }}
-              onMouseEnter={() => {
-                setHover({ id: l.id, label: l.label, type: l.type, x: l.x, y: l.y });
-                isHoveringLabelRef.current = true;
-              }}
-              onMouseLeave={() => {
-                setHover(null);
-                isHoveringLabelRef.current = false;
-              }}
-            >
-              {l.label}
-            </div>
-          ))}
-      
-      {hover && currentNode && (
+      {ready && labels.filter((l) => l.visible).map((l) => (
         <div
-          className="pointer-events-none absolute rounded-lg bg-black/90 px-4 py-3 text-xs ring-1 ring-white/20 z-10 max-w-md backdrop-blur-sm"
-          style={{ left: hover.x + 12, top: hover.y + 12, maxHeight: "80vh", overflowY: "auto" }}
+          key={l.id}
+          className="absolute text-[10px] text-white/70 whitespace-nowrap cursor-pointer hover:text-white transition-colors select-none"
+          style={{ left: l.x, top: l.y, transform: "translate(-50%, -120%)", pointerEvents: isTouchDevice ? 'none' : 'auto' }}
+          onMouseEnter={() => { setHover({ id: l.id, label: l.label, type: l.type, x: l.x, y: l.y }); isHoveringLabelRef.current = true; }}
+          onMouseLeave={() => { setHover(null); isHoveringLabelRef.current = false; }}
         >
+          {l.label}
+        </div>
+      ))}
+      {/* Desktop tooltip */}
+      {(!isTouchDevice && hover && currentNode) && (
+        <TooltipBox x={hover.x} y={hover.y}>
           <div className="font-semibold text-[color:var(--accent)] text-sm">{hover.label}</div>
           <div className="text-[10px] text-[color:var(--muted)] mt-0.5 capitalize">{hover.type}</div>
-          
-          {/* Rich metadata display */}
           {currentNode.meta && (
             <div className="mt-3 space-y-2">
-              {/* Description */}
               {(currentNode.meta as any).description && (
-                <div className="text-[11px] leading-relaxed text-white/80">
-                  {(currentNode.meta as any).description}
-                </div>
+                <div className="text-[11px] leading-relaxed text-white/80">{(currentNode.meta as any).description}</div>
               )}
-              
-              {/* Stack/Technologies */}
               {((currentNode.meta as any).stack || (currentNode.meta as any).technologies) && (
                 <div className="mt-2">
-                  <div className="text-[10px] text-[color:var(--accent-green)] font-medium mb-1">
-                    {(currentNode.meta as any).stack ? "Stack" : "Technologies"}
-                  </div>
+                  <div className="text-[10px] text-[color:var(--accent-green)] font-medium mb-1">{(currentNode.meta as any).stack ? "Stack" : "Technologies"}</div>
                   <div className="flex flex-wrap gap-1">
                     {((currentNode.meta as any).stack || (currentNode.meta as any).technologies || []).map((tech: string, i: number) => (
-                      <span key={i} className="inline-block rounded bg-[color:var(--accent-green)]/20 px-1.5 py-0.5 text-[10px] text-[color:var(--accent-green)]">
-                        {tech}
-                      </span>
+                      <span key={i} className="inline-block rounded bg-[color:var(--accent-green)]/20 px-1.5 py-0.5 text-[10px] text-[color:var(--accent-green)]">{tech}</span>
                     ))}
                   </div>
                 </div>
               )}
-              
-              {/* Timeline */}
               {(currentNode.meta as any).timeline && (
-                <div className="text-[10px] text-[color:var(--muted)]">
-                  <span className="font-medium">Timeline:</span> {(currentNode.meta as any).timeline}
-                </div>
+                <div className="text-[10px] text-[color:var(--muted)]"><span className="font-medium">Timeline:</span> {(currentNode.meta as any).timeline}</div>
               )}
-              
-              {/* Impact */}
               {(currentNode.meta as any).impact && (
-                <div className="text-[10px] text-[color:var(--accent-brown)]">
-                  <span className="font-medium">Impact:</span> {(currentNode.meta as any).impact}
-                </div>
+                <div className="text-[10px] text-[color:var(--accent-brown)]"><span className="font-medium">Impact:</span> {(currentNode.meta as any).impact}</div>
               )}
-              
-              {/* Proficiency (for skills) */}
               {(currentNode.meta as any).proficiency && (
-                <div className="text-[10px]">
-                  <span className="font-medium text-[color:var(--muted)]">Proficiency:</span>{" "}
-                  <span className="text-[color:var(--accent)]">{(currentNode.meta as any).proficiency}</span>
-                </div>
+                <div className="text-[10px]"><span className="font-medium text-[color:var(--muted)]">Proficiency:</span> <span className="text-[color:var(--accent)]">{(currentNode.meta as any).proficiency}</span></div>
               )}
-              
-              {/* Projects (for skills) */}
               {(currentNode.meta as any).projects && Array.isArray((currentNode.meta as any).projects) && (
                 <div className="mt-2">
                   <div className="text-[10px] text-[color:var(--muted)] font-medium mb-1">Used in</div>
-                  <div className="text-[10px] text-white/70">
-                    {(currentNode.meta as any).projects.join(", ")}
-                  </div>
+                  <div className="text-[10px] text-white/70">{(currentNode.meta as any).projects.join(", ")}</div>
                 </div>
               )}
-              
-              {/* Key Achievements */}
               {(currentNode.meta as any).keyAchievements && (
-            <div className="mt-2">
+                <div className="mt-2">
                   <div className="text-[10px] text-[color:var(--accent-brown)] font-medium mb-1">Key Achievements</div>
                   <ul className="list-disc list-inside text-[10px] text-white/80 space-y-0.5">
                     {((currentNode.meta as any).keyAchievements || []).map((achievement: string, i: number) => (
                       <li key={i}>{achievement}</li>
-                ))}
-              </ul>
+                    ))}
+                  </ul>
                 </div>
               )}
             </div>
           )}
-          
-          {/* Related nodes */}
           {relatedNodes.length > 0 && (
             <div className="mt-3 pt-3 border-t border-white/10">
               <div className="text-[10px] text-[color:var(--muted)] mb-1.5 font-medium">Related Connections</div>
               <div className="flex flex-wrap gap-1">
                 {relatedNodes.slice(0, 12).map((n) => (
-                  <span
-                    key={n.id}
-                    className="inline-block rounded bg-white/10 px-1.5 py-0.5 text-[10px] hover:bg-white/20 transition-colors"
-                  >
-                    {n.label}
-                  </span>
+                  <span key={n.id} className="inline-block rounded bg-white/10 px-1.5 py-0.5 text-[10px] hover:bg-white/20 transition-colors">{n.label}</span>
                 ))}
                 {relatedNodes.length > 12 && (
                   <span className="text-[10px] text-[color:var(--muted)]">+{relatedNodes.length - 12} more</span>
                 )}
-          </div>
-        </div>
+              </div>
+            </div>
+          )}
+        </TooltipBox>
       )}
-        </div>
+
+      {/* Mobile tooltip */}
+      {isTouchDevice && mobileOpen && mobileAnchor && mobileSelectedId && mobileCurrentNode && (
+        <MobileTooltip 
+          anchor={mobileAnchor} 
+          onClose={() => { setMobileOpen(false); setMobileAnchor(null); setMobileSelectedId(null); setHover(null); }}
+        >
+          <div className="font-semibold text-[color:var(--accent)] text-sm">{mobileCurrentNode.label}</div>
+          <div className="text-[10px] text-[color:var(--muted)] mt-0.5 capitalize">{mobileCurrentNode.type}</div>
+          {mobileCurrentNode.meta && (
+            <div className="mt-3 space-y-2">{(mobileCurrentNode.meta as any).description}</div>
+          )}
+          {mobileRelatedNodes.length > 0 && (
+            <div className="mt-3 pt-3 border-t border-white/10">
+              {mobileRelatedNodes.slice(0,6).map((n) => (
+                <div key={n.id} className="inline-block rounded bg-white/10 px-2 py-1 text-[10px] mr-1">{n.label}</div>
+              ))}
+            </div>
+          )}
+        </MobileTooltip>
       )}
     </div>
   );
+}
+
+function TooltipBox({ x, y, children }: { x: number; y: number; children: React.ReactNode }) {
+  // Compute clamped position with smart flipping near edges
+  const PADDING = 12;
+  const MAX_W = 480; // matches max-w-md
+  const MIN_W = 300; // prevent ultra-thin tooltips on flip
+  const MAX_H = 0.8 * (typeof window !== 'undefined' ? window.innerHeight : 800);
+
+  let left = x + PADDING;
+  let top = y + PADDING;
+  let transform = "translate(0, 0)";
+
+  if (typeof window !== 'undefined') {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    // Flip horizontally if exceeding right edge
+    if (left + MAX_W + PADDING > vw) {
+      // When anchoring to the right edge of the tooltip (translateX(-100%)),
+      // ensure there is at least MIN_W space to the left of the anchor.
+      left = Math.max(PADDING + MIN_W, x - PADDING);
+      transform = "translate(-100%, 0)";
+    }
+
+    // Flip vertically if exceeding bottom edge
+    if (top + MAX_H + PADDING > vh) {
+      top = Math.max(PADDING, y - PADDING);
+      transform = transform.includes("-100%") ? "translate(-100%, -100%)" : "translate(0, -100%)";
+    }
+
+    // Clamp to viewport
+    left = Math.min(Math.max(left, PADDING), vw - PADDING);
+    top = Math.min(Math.max(top, PADDING), vh - PADDING);
+  }
+
+  return (
+    <div
+      className="pointer-events-none absolute rounded-lg bg-black/90 px-4 py-3 text-xs ring-1 ring-white/20 z-10 max-w-md backdrop-blur-sm"
+      style={{ left, top, transform, maxHeight: MAX_H, overflowY: 'auto' as const, minWidth: MIN_W, maxWidth: 'min(480px, calc(100vw - 24px))' }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function TooltipStyles() {
+  return null;
 }
 
 
