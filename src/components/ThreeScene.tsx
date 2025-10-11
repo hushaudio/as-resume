@@ -613,9 +613,47 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
         <div
           key={l.id}
           className="absolute text-[10px] text-white/70 whitespace-nowrap cursor-pointer hover:text-white transition-colors select-none"
-          style={{ left: l.x, top: l.y, transform: "translate(-50%, -120%)", pointerEvents: isTouchDevice ? 'none' : 'auto' }}
+          style={{ left: l.x, top: l.y, transform: "translate(-50%, -120%)", pointerEvents: 'auto' }}
           onMouseEnter={() => { setHover({ id: l.id, label: l.label, type: l.type, x: l.x, y: l.y }); isHoveringLabelRef.current = true; }}
           onMouseLeave={() => { setHover(null); isHoveringLabelRef.current = false; }}
+          onPointerDown={(e: any) => {
+            // Record touch start for label taps (mobile). Do not stop propagation so drag still works.
+            if (!isTouchRef.current) return;
+            touchStartRef.current = { x: e.clientX, y: e.clientY, time: performance.now() };
+          }}
+          onPointerUp={(e: any) => {
+            if (!isTouchRef.current) return;
+            const start = touchStartRef.current;
+            touchStartRef.current = null;
+            if (!start) return;
+            const dx = e.clientX - start.x;
+            const dy = e.clientY - start.y;
+            const distSq = dx * dx + dy * dy;
+            const dt = performance.now() - start.time;
+            const TAP_MAX_DIST_SQ = 15 * 15;
+            const TAP_MAX_DT = 500;
+            if (distSq > TAP_MAX_DIST_SQ || dt > TAP_MAX_DT) return; // treat as drag
+            // It's a tap on the label — open mobile tooltip for this id
+            const rect = ref.current?.getBoundingClientRect();
+            if (!rect) return;
+            const cy = e.clientY - rect.top;
+            const vhMid = rect.height / 2;
+            const anchor: "top" | "bottom" = cy > vhMid ? "top" : "bottom";
+            const hitId = l.id;
+            const cx = e.clientX - rect.left;
+            // Update mobile selection
+            if (mobileOpen && mobileAnchor === anchor && mobileSelectedId === hitId) {
+              setMobileOpen(false);
+              setMobileAnchor(null);
+              setMobileSelectedId(null);
+              setHover(null);
+            } else {
+              setMobileAnchor(anchor);
+              setMobileSelectedId(hitId);
+              setHover({ id: l.id, label: l.label, type: l.type, x: cx, y: cy });
+              setMobileOpen(true);
+            }
+          }}
         >
           {l.label}
         </div>
