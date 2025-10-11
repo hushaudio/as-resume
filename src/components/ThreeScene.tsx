@@ -296,7 +296,7 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
     };
   }, [memo]);
 
-  // Compute related nodes for tooltip
+  // Compute related nodes and current node data for tooltip
   const relatedNodes = useMemo(() => {
     if (!hover) return [];
     const ids = new Set<string>();
@@ -305,6 +305,11 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
       else if (l.target === hover.id) ids.add(l.source);
     }
     return memo.nodes.filter((n) => ids.has(n.id));
+  }, [hover, memo]);
+
+  const currentNode = useMemo(() => {
+    if (!hover) return null;
+    return memo.nodes.find((n) => n.id === hover.id) || null;
   }, [hover, memo]);
 
   return (
@@ -333,27 +338,101 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
             </div>
           ))}
       
-      {hover && (
+      {hover && currentNode && (
         <div
-          className="pointer-events-none absolute rounded-lg bg-black/80 px-3 py-2 text-xs ring-1 ring-white/20 z-10 max-w-xs"
-          style={{ left: hover.x + 12, top: hover.y + 12 }}
+          className="pointer-events-none absolute rounded-lg bg-black/90 px-4 py-3 text-xs ring-1 ring-white/20 z-10 max-w-md backdrop-blur-sm"
+          style={{ left: hover.x + 12, top: hover.y + 12, maxHeight: "80vh", overflowY: "auto" }}
         >
-          <div className="font-semibold text-[color:var(--accent)]">{hover.label}</div>
+          <div className="font-semibold text-[color:var(--accent)] text-sm">{hover.label}</div>
           <div className="text-[10px] text-[color:var(--muted)] mt-0.5 capitalize">{hover.type}</div>
+          
+          {/* Rich metadata display */}
+          {currentNode.meta && (
+            <div className="mt-3 space-y-2">
+              {/* Description */}
+              {(currentNode.meta as any).description && (
+                <div className="text-[11px] leading-relaxed text-white/80">
+                  {(currentNode.meta as any).description}
+                </div>
+              )}
+              
+              {/* Stack/Technologies */}
+              {((currentNode.meta as any).stack || (currentNode.meta as any).technologies) && (
+                <div className="mt-2">
+                  <div className="text-[10px] text-[color:var(--accent-green)] font-medium mb-1">
+                    {(currentNode.meta as any).stack ? "Stack" : "Technologies"}
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {((currentNode.meta as any).stack || (currentNode.meta as any).technologies || []).map((tech: string, i: number) => (
+                      <span key={i} className="inline-block rounded bg-[color:var(--accent-green)]/20 px-1.5 py-0.5 text-[10px] text-[color:var(--accent-green)]">
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Timeline */}
+              {(currentNode.meta as any).timeline && (
+                <div className="text-[10px] text-[color:var(--muted)]">
+                  <span className="font-medium">Timeline:</span> {(currentNode.meta as any).timeline}
+                </div>
+              )}
+              
+              {/* Impact */}
+              {(currentNode.meta as any).impact && (
+                <div className="text-[10px] text-[color:var(--accent-brown)]">
+                  <span className="font-medium">Impact:</span> {(currentNode.meta as any).impact}
+                </div>
+              )}
+              
+              {/* Proficiency (for skills) */}
+              {(currentNode.meta as any).proficiency && (
+                <div className="text-[10px]">
+                  <span className="font-medium text-[color:var(--muted)]">Proficiency:</span>{" "}
+                  <span className="text-[color:var(--accent)]">{(currentNode.meta as any).proficiency}</span>
+                </div>
+              )}
+              
+              {/* Projects (for skills) */}
+              {(currentNode.meta as any).projects && Array.isArray((currentNode.meta as any).projects) && (
+                <div className="mt-2">
+                  <div className="text-[10px] text-[color:var(--muted)] font-medium mb-1">Used in</div>
+                  <div className="text-[10px] text-white/70">
+                    {(currentNode.meta as any).projects.join(", ")}
+                  </div>
+                </div>
+              )}
+              
+              {/* Key Achievements */}
+              {(currentNode.meta as any).keyAchievements && (
+                <div className="mt-2">
+                  <div className="text-[10px] text-[color:var(--accent-brown)] font-medium mb-1">Key Achievements</div>
+                  <ul className="list-disc list-inside text-[10px] text-white/80 space-y-0.5">
+                    {((currentNode.meta as any).keyAchievements || []).map((achievement: string, i: number) => (
+                      <li key={i}>{achievement}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Related nodes */}
           {relatedNodes.length > 0 && (
-            <div className="mt-2 pt-2 border-t border-white/10">
-              <div className="text-[10px] text-[color:var(--muted)] mb-1">Related</div>
+            <div className="mt-3 pt-3 border-t border-white/10">
+              <div className="text-[10px] text-[color:var(--muted)] mb-1.5 font-medium">Related Connections</div>
               <div className="flex flex-wrap gap-1">
-                {relatedNodes.slice(0, 8).map((n) => (
+                {relatedNodes.slice(0, 12).map((n) => (
                   <span
                     key={n.id}
-                    className="inline-block rounded bg-white/10 px-1.5 py-0.5 text-[10px]"
+                    className="inline-block rounded bg-white/10 px-1.5 py-0.5 text-[10px] hover:bg-white/20 transition-colors"
                   >
                     {n.label}
                   </span>
                 ))}
-                {relatedNodes.length > 8 && (
-                  <span className="text-[10px] text-[color:var(--muted)]">+{relatedNodes.length - 8} more</span>
+                {relatedNodes.length > 12 && (
+                  <span className="text-[10px] text-[color:var(--muted)]">+{relatedNodes.length - 12} more</span>
                 )}
               </div>
             </div>

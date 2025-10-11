@@ -98,14 +98,15 @@ If a team says “not possible,” I map constraints, build the path, and make i
 ### DeepSampler2
 - **What:** First text→audio-sample VST.
 - **How:** Built from **Stable Audio Open** early access; integrated with **Audialab Engine** for local inference.
+- built using JUCE in C++ and React Vite for the webview frontend
 
 ### Interloper
 - **What:** JUCE plugin with **embedded ONNX** for in-plugin sample generation.
 - **Stack:** C++/JUCE backend, React/Vite UI; no external engine → lower setup friction and support load.
 
 ### Audialab Engine
-- **What:** Python host for local AI audio models.
-- **Notes:** Hot-swappable backends (HF/community); offline-capable; creator-friendly + hackable.
+- **What:** Python host for local AI audio models.  Uses pyinstaller, handled by another employee I have no experience with pyinstaller directly.
+- **Notes:** Hot-swappable models (HF/community); offline-capable; creator-friendly + hackable.
 
 ### The Audioverse *(decentralized streaming platform; R&D build)*
 - **Goal:** First-principles, creator-owned distribution and charting.
@@ -118,9 +119,11 @@ If a team says “not possible,” I map constraints, build the path, and make i
   - **ENS** for user profiles.
   - **QR** flows to share/purchase releases.
 - **Status:** Fully functional proof; demonstrates end-to-end decentralized purchase/ownership + streaming.
+- React Native, Nestjs, Solidity, Goerly Testnet, etc.
 
 ### The Oracle *(pre-launch)*
-- **What:** Swiss Ephemeris astrology app; multi-chart workflow (natal, transits, progressions, returns).
+- **What:** Swiss Ephemeris astrology app; multi-chart workflow (natal, transits, progressions, returns).  Google and apple calendar integrations.  Chatbot with pinned charts and scheduling tool access.  Synestry charts with custom relationship types.  Daily insights built from a pipeline of 5 charts for each day of the week.
+
 - **Notes:** Pre-launch; show via demo/screen recording in interviews.
 
 ---
