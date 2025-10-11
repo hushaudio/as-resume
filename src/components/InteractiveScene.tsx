@@ -105,7 +105,7 @@ export default function InteractiveScene({ graph }: { graph: GraphData }) {
   }, []);
 
   return (
-    <div ref={containerRef} className="relative w-full aspect-[16/9] overflow-hidden rounded-xl bg-white/5 ring-1 ring-white/10">
+    <div ref={containerRef} className="relative w-full h-full overflow-hidden" style={{ width: '100vw', height: '100vh' }}>
       {mounted && canWebGL ? (
         <Suspense
           fallback={<div className="absolute inset-0 grid place-items-center text-sm text-[color:var(--muted)]">Preparing 3D…</div>}

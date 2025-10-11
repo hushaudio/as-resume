@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -22,10 +23,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        {/* Transparent floating nav */}
+        <div className="fixed top-4 left-0 right-0 z-50 pointer-events-none">
+          <nav className="mx-auto max-w-4xl px-4">
+            <div className="flex items-center justify-between rounded-full bg-black/20 backdrop-blur-md px-4 py-2 ring-1 ring-white/10 pointer-events-auto">
+              <Link href="/resume" className="text-sm text-white/80 hover:text-white transition-colors">Resume</Link>
+              <Link href="/graph" className="text-sm text-white/80 hover:text-white transition-colors">Graph</Link>
+            </div>
+          </nav>
+        </div>
+
         <div className="min-h-screen bg-[color:var(--color-background)] text-[color:var(--color-foreground)]">
-          <div className="max-w-4xl mx-auto px-6 py-12">
-            {children}
-          </div>
+          {children}
         </div>
       </body>
     </html>

@@ -10,6 +10,8 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
   const [labels, setLabels] = useState<Array<{ id: string; label: string; type: string; x: number; y: number; visible: boolean }>>(
     []
   );
+  const isHoveringCanvasRef = useRef(false);
+  const isHoveringLabelRef = useRef(false);
 
   // Flatten nodes and links into simple arrays for minimal Three init
   const memo = useMemo(() => ({ nodes: graph.nodes, links: graph.links }), [graph]);
@@ -36,7 +38,7 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
       controls.enableDamping = true;
       controls.dampingFactor = 0.08;
       controls.minDistance = 5;
-      controls.maxDistance = 15;
+      controls.maxDistance = 30;
 
       const resize = () => {
         const r = el.getBoundingClientRect();
@@ -233,16 +235,72 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
           setHover(null);
       };
       const onPointerLeave = () => { setHover(null); renderer.domElement.style.cursor = "grab"; };
+      const onPointerEnter = () => { isHoveringCanvasRef.current = true; };
+      const onPointerLeaveCanvas = () => { isHoveringCanvasRef.current = false; };
+
       renderer.domElement.style.cursor = "grab";
       renderer.domElement.addEventListener("pointermove", onPointerMove);
       renderer.domElement.addEventListener("pointerleave", onPointerLeave);
+      renderer.domElement.addEventListener("pointerenter", onPointerEnter);
+      renderer.domElement.addEventListener("pointerleave", onPointerLeaveCanvas);
       controls.addEventListener("start", () => { isDragging = true; setHover(null); });
       controls.addEventListener("end", () => { isDragging = false; });
 
       let raf = 0;
       const tempVec = new THREE.Vector3();
+      const spherical = new THREE.Spherical();
+      let currentRotationSpeed = 0;
+      const targetRotationSpeed = 0.0004; // Even slower rotation speed (0.5x)
+      const targetVerticalSpeed = 0.00015; // Gentle vertical bobbing (0.5x)
+      const easingFactor = 0.02; // How quickly it eases in/out
+      let verticalPhase = 0; // Track vertical oscillation phase
+      const verticalAmplitude = 0.05; // radians offset for polar angle (~2.8deg)
+      let autoRotating = false; // track if auto-rotation is currently active
+      let basePhi = 0; // baseline polar angle when auto-rotation starts/resumes
+
+      const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
+      const minPhi = 0.01;
+      const maxPhi = Math.PI - 0.01;
+
       const animate = () => {
         controls.update();
+
+        // Smoothly ease rotation speed based on hover/dragging state
+        // Stop rotation when hovering over canvas OR text labels, or when dragging
+        const targetSpeed = (!isHoveringCanvasRef.current && !isHoveringLabelRef.current && !isDragging) ? targetRotationSpeed : 0;
+        currentRotationSpeed += (targetSpeed - currentRotationSpeed) * easingFactor;
+
+        // Apply rotation if speed is above threshold
+        const toCam = camera.position.clone().sub(controls.target);
+        spherical.setFromVector3(toCam);
+
+        const nowActive = Math.abs(currentRotationSpeed) > 0.00001;
+        if (nowActive && !autoRotating) {
+          // Starting auto-rotation: align baseline to avoid vertical jump
+          const currentDesiredOffset = Math.sin(verticalPhase) * verticalAmplitude;
+          basePhi = clamp(spherical.phi - currentDesiredOffset, minPhi, maxPhi);
+          autoRotating = true;
+        }
+        if (!nowActive && autoRotating) {
+          // Stopping auto-rotation: keep camera where it is
+          autoRotating = false;
+        }
+
+        if (nowActive) {
+          // Horizontal azimuthal rotation (theta around Y axis)
+          spherical.theta += currentRotationSpeed;
+
+          // Gentle vertical modulation (phi) around baseline
+          verticalPhase += targetVerticalSpeed;
+          const desiredOffset = Math.sin(verticalPhase) * verticalAmplitude;
+          spherical.phi = clamp(basePhi + desiredOffset, minPhi, maxPhi);
+
+          // Write back to camera position
+          tempVec.setFromSpherical(spherical);
+          camera.position.copy(controls.target).add(tempVec);
+          camera.lookAt(controls.target);
+        }
+
         renderer.render(scene, camera);
         
         // Project 3D positions to screen for persistent labels
@@ -281,6 +339,8 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
         window.removeEventListener("resize", resize);
         renderer.domElement.removeEventListener("pointermove", onPointerMove);
         renderer.domElement.removeEventListener("pointerleave", onPointerLeave);
+        renderer.domElement.removeEventListener("pointerenter", onPointerEnter);
+        renderer.domElement.removeEventListener("pointerleave", onPointerLeaveCanvas);
         scene.clear();
         pointGeo.dispose();
         lineGeo.dispose();
@@ -332,8 +392,14 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
                 top: l.y,
                 transform: "translate(-50%, -120%)",
               }}
-              onMouseEnter={() => setHover({ id: l.id, label: l.label, type: l.type, x: l.x, y: l.y })}
-              onMouseLeave={() => setHover(null)}
+              onMouseEnter={() => {
+                setHover({ id: l.id, label: l.label, type: l.type, x: l.x, y: l.y });
+                isHoveringLabelRef.current = true;
+              }}
+              onMouseLeave={() => {
+                setHover(null);
+                isHoveringLabelRef.current = false;
+              }}
             >
               {l.label}
             </div>

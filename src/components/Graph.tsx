@@ -582,14 +582,8 @@ export default function Graph() {
   })();
 
   return (
-    <section className="mt-10">
-      <h2 className="text-xl font-medium text-accent">Interactive</h2>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Knowledge graph of this resume. Click a node to explore related items.
-      </p>
-      <div className="mt-4">
-        <InteractiveScene graph={graph} />
-      </div>
-    </section>
+    <div className="fixed inset-0">{/* fullscreen, nav floats above */}
+      <InteractiveScene graph={graph} />
+    </div>
   );
 }

@@ -1,11 +1,5 @@
-import Resume from "@/components/Resume";
-import Graph from "@/components/Graph";
+import { redirect } from "next/navigation";
 
 export default function Home() {
-  return (
-    <>
-      <Resume />
-      <Graph />
-    </>
-  );
+  redirect("/resume");
 }
