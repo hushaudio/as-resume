@@ -4,8 +4,9 @@
 
 import { useEffect, useRef, useState, useMemo } from "react";
 import MobileTooltip from "./MobileTooltip";
-import type { GraphData } from "@/components/InteractiveScene";
+import AudioverseVideoLink from "@/components/AudioverseVideoLink";
 import { getNodeTypeColor } from "@/lib/nodeColors";
+import type { GraphData } from "@/components/InteractiveScene";
 
 export default function ThreeScene({ graph }: { graph: GraphData }) {
   const ref = useRef<HTMLDivElement | null>(null);
@@ -365,16 +366,14 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
       const onPointerMove = (ev: PointerEvent) => {
         // Ignore hover logic on touch devices to avoid flicker/clearing selection
         if (isTouchRef.current) return;
+        // When a tooltip is locked, hovering should do nothing
+        if (locked) { renderer.domElement.style.cursor = "grab"; return; }
         if (isDragging) { setHover(null); isHoveringLabelRef.current = false; return; }
         const rect = renderer.domElement.getBoundingClientRect();
         const cx = ev.clientX - rect.left;
         const cy = ev.clientY - rect.top;
         const hitId = selectNodeAt(ev.clientX, ev.clientY);
-        if (hitId) {
-          // If hovering a new node while locked, release lock
-          if (locked && locked.id !== hitId) setLocked(null);
-          isHoveringLabelRef.current = true; renderer.domElement.style.cursor = "pointer"; return;
-        }
+        if (hitId) { isHoveringLabelRef.current = true; renderer.domElement.style.cursor = "pointer"; return; }
         renderer.domElement.style.cursor = "grab";
         isHoveringLabelRef.current = false;
         setHover(null);
@@ -382,7 +381,7 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
       // Desktop click to lock/unlock
       const onPointerUpDesktop = (ev: PointerEvent) => {
         if (isTouchRef.current) return; // handled by mobile logic
-        if (isDragging) return;
+        // If drag occurred, lock was already cleared in controls 'start'.
         const rect = renderer.domElement.getBoundingClientRect();
         const cx = ev.clientX - rect.left;
         const cy = ev.clientY - rect.top;
@@ -400,6 +399,13 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
         if (!isTouch) return;
         // Record start to distinguish tap vs drag; do not block OrbitControls
         touchStartRef.current = { x: ev.clientX, y: ev.clientY, time: performance.now() };
+      };
+
+      // Desktop: if pressing on empty canvas, clear lock immediately
+      const onPointerDownDesktop = (ev: PointerEvent) => {
+        if (isTouchRef.current) return;
+        const hitId = selectNodeAt(ev.clientX, ev.clientY);
+        if (!hitId) setLocked(null);
       };
 
       const onPointerUp = (ev: PointerEvent) => {
@@ -484,7 +490,13 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
       renderer.domElement.addEventListener('pointerdown', onPointerDown, { passive: true } as any);
       renderer.domElement.addEventListener('pointerup', onPointerUp, { passive: true } as any);
       renderer.domElement.addEventListener('pointerup', onPointerUpDesktop, { passive: true } as any);
-      controls.addEventListener("start", () => { isDragging = true; setHover(null); isHoveringLabelRef.current = false; });
+      renderer.domElement.addEventListener('pointerdown', onPointerDownDesktop, { passive: true } as any);
+      controls.addEventListener("start", () => {
+        isDragging = true;
+        setHover(null);
+        setLocked(null); // unpin when user starts rotating the camera
+        isHoveringLabelRef.current = false;
+      });
       controls.addEventListener("end", () => { isDragging = false; });
 
       let raf = 0;
@@ -589,6 +601,8 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
         renderer.domElement.removeEventListener("pointerleave", onPointerLeaveCanvas);
         renderer.domElement.removeEventListener('pointerdown', onPointerDown as any);
         renderer.domElement.removeEventListener('pointerup', onPointerUp as any);
+        renderer.domElement.removeEventListener('pointerdown', onPointerDownDesktop as any);
+        renderer.domElement.removeEventListener('pointerup', onPointerUpDesktop as any);
         scene.clear();
         pointGeo.dispose();
         lineGeo.dispose();
@@ -605,9 +619,9 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
     };
   }, [memo]);
 
-  // Compute related nodes and current node data for tooltip
+  // Compute related nodes for whichever selection is active
   const relatedNodes = useMemo(() => {
-    const id = isTouchDevice ? hover?.id : (hover?.id ?? locked?.id);
+    const id = isTouchDevice ? hover?.id : (locked?.id ?? hover?.id);
     if (!id) return [];
     const ids = new Set<string>();
     for (const l of memo.links) {
@@ -617,16 +631,16 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
     return memo.nodes.filter((n) => ids.has(n.id));
   }, [hover, locked, memo, isTouchDevice]);
 
-  // Active selection for desktop: prefer hover; fall back to locked
+  // Active selection for desktop: prefer locked over hover
   const activeId = useMemo(() => {
     if (isTouchDevice) return hover?.id ?? null;
-    return (hover?.id ?? locked?.id) ?? null;
+    return (locked?.id ?? hover?.id) ?? null;
   }, [hover, locked, isTouchDevice]);
 
   const activePos = useMemo(() => {
     if (isTouchDevice) return hover ? { x: hover.x, y: hover.y } : null;
-    if (hover) return { x: hover.x, y: hover.y };
     if (locked) return { x: locked.x, y: locked.y };
+    if (hover) return { x: hover.x, y: hover.y };
     return null;
   }, [hover, locked, isTouchDevice]);
 
@@ -807,7 +821,8 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
           className="absolute text-[10px] text-white/70 whitespace-nowrap cursor-pointer hover:text-white transition-colors select-none"
           style={{ left: l.x, top: l.y, transform: "translate(-50%, -120%)", pointerEvents: 'auto' }}
           onMouseEnter={() => {
-            if (locked && locked.id !== l.id) setLocked(null);
+            // Ignore hover entirely while a tooltip is locked
+            if (locked) return;
             setHover({ id: l.id, label: l.label, type: l.type, x: l.x, y: l.y });
             isHoveringLabelRef.current = true;
           }}
@@ -868,6 +883,11 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
             <div className="mt-3 space-y-2">
               {(currentNode.meta as any).description && (
                 <div className="text-[11px] leading-relaxed text-white/80">{(currentNode.meta as any).description}</div>
+              )}
+              {(currentNode.meta as any).video && (
+                <div className="mt-2">
+                  <AudioverseVideoLink src={(currentNode.meta as any).video} desc={(currentNode.meta as any).videoDescription} />
+                </div>
               )}
               {((currentNode.meta as any).stack || (currentNode.meta as any).technologies) && (
                 <div className="mt-2">
@@ -953,6 +973,11 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
             <div className="mt-3 space-y-2">
               {(mobileCurrentNode.meta as any).description && (
                 <div className="text-[11px] leading-relaxed text-white/80">{(mobileCurrentNode.meta as any).description}</div>
+              )}
+              {(mobileCurrentNode.meta as any).video && (
+                <div className="mt-2">
+                  <AudioverseVideoLink src={(mobileCurrentNode.meta as any).video} desc={(mobileCurrentNode.meta as any).videoDescription} />
+                </div>
               )}
               {((mobileCurrentNode.meta as any).stack || (mobileCurrentNode.meta as any).technologies) && (
                 <div className="mt-2">

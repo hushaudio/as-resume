@@ -25,10 +25,10 @@ const data = {
   ],
   experience: [
     {
-      title: "UE5/Game Tech (Consult)",
-      company: "Oberha5li Studios",
+      title: "UE5/Game Tech",
+      company: "Oberha5li Studios (deadmau5)",
       years: "2024–Present",
-      bullets: ["Unblocked TestFlight deployment for Mowingtons."],
+      bullets: ["Unblocked TestFlight deployment for Mowingtons.", "Was asked to stay on the team to handle iOS deployment, replacing a publishing company."],
       link: "https://store.steampowered.com/app/2766880/Meowingtons_Simulator/"
     },
     {

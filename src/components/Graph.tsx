@@ -191,7 +191,9 @@ const graphMetadata = {
       stack: ["React Native", "NestJS", "Solidity", "IPFS", "WatermelonDB", "Goerli", "Blockchain Oracles"],
       timeline: "2022–2024",
       impact: "100% decentralized music platform with zero centralized infrastructure",
-      keyChallenges: ["Truly decentralized storage and streaming without centralized fallbacks", "NFT-inherited release ownership on-chain", "Real-time charts computed purely from blockchain events", "Secure audio chunking and encryption for private files on IPFS"]
+      keyChallenges: ["Truly decentralized storage and streaming without centralized fallbacks", "NFT-inherited release ownership on-chain", "Real-time charts computed purely from blockchain events", "Secure audio chunking and encryption for private files on IPFS"],
+      video: "/videos/audioverse.mp4",
+      videoDescription: "This demo uses mock data for the \"Audioverse\" and \"Feed\" screens to illustrate flows that would normally require larger amounts of user data. \"Scan\", \"Libary\", and \"Profile\" screens all use real blockchain data on the Goerli test network and real IPFS peer shared data for full decentralization."
     },
     "The Oracle": {
       description: "Astrology planner and oracle chat. It generates daily/weekly readings from Swiss Ephemeris, interprets pinned charts in chat, and auto-schedules tasks when alignments are optimal. Supports multi-chart workflows (natal, transits, progressions, returns, event/relocation/harmonics) plus synastry/composite with custom relationship types (e.g., Band mate”). Week-at-a-glance surfaces key windows; a daily pipeline precomputes ~5 charts/day for personalized guidance.",
@@ -299,7 +301,7 @@ const graphMetadata = {
     },
     "C#": {
       description: "4+ years with C# for game development and Unity projects. Used in Unreal Engine consulting work and cross-platform development.",
-      projects: ["Oberha5li Studios consulting"],
+      projects: ["Oberha5li Studios"],
       proficiency: "Advanced"
     },
     "Shopify API": {
@@ -599,7 +601,7 @@ export default function Graph() {
         { cred: "Strange Music", targets: ["Strange Music", "W.H.A.T. — Tech N9ne, HU$H, Kim Dracula", "BLIGHT — Tech N9ne, HU$H"] },
         { cred: "Hungryroot", targets: ["Contract Engineer", "565 Media"] },
         { cred: "deadmau5", targets: ["deadmau5", "Oberha5li Studios"] },
-        { cred: "Oberha5li Studios", targets: ["UE5/Game Tech (Consult)", "Oberha5li Studios", "deadmau5"] },
+        { cred: "Oberha5li Studios", targets: ["UE5/Game Tech", "Oberha5li Studios", "deadmau5"] },
         { cred: "Ric Wake / RB-360", targets: ["Consulting Engineer", "Ric Wake / RB-360"] },
         { cred: "Iron Man 3", targets: ["Iron Man 3 soundtrack credit"] },
       ],
