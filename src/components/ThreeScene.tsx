@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import MobileTooltip from "./MobileTooltip";
 import type { GraphData } from "@/components/InteractiveScene";
+import { getNodeTypeColor } from "@/lib/nodeColors";
 
 export default function ThreeScene({ graph }: { graph: GraphData }) {
   const ref = useRef<HTMLDivElement | null>(null);
@@ -21,6 +22,10 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
   const [isTouchDevice, setIsTouchDevice] = useState(false);
   const isTouchRef = useRef(false);
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  // Desktop-only: lock tooltip on click until outside click or new hover
+  const [locked, setLocked] = useState<{ id: string; x: number; y: number } | null>(null);
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
+  const [showControlsTooltip, setShowControlsTooltip] = useState(false);
   // debugInfo removed
   
   useEffect(() => {
@@ -48,6 +53,25 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
       if (typeof document !== 'undefined') document.body.style.overflow = prevOverflow;
     };
   }, [mobileOpen, isTouchDevice]);
+
+  // Global outside-click to clear desktop locked tooltip when clicking outside the component
+  useEffect(() => {
+    const onDocPointerDown = (e: PointerEvent) => {
+      if (!locked) return;
+      const root = ref.current;
+      const tip = tooltipRef.current;
+      const target = e.target as Node | null;
+      if (!target) return;
+      // If click is inside tooltip, ignore (tooltip should not close)
+      if (tip && tip.contains(target)) return;
+      // If click is outside root container, clear lock
+      if (root && !root.contains(target)) {
+        setLocked(null);
+      }
+    };
+    document.addEventListener('pointerdown', onDocPointerDown, true);
+    return () => document.removeEventListener('pointerdown', onDocPointerDown, true);
+  }, [locked]);
   // Flatten nodes and links into simple arrays for minimal Three init
   const memo = useMemo(() => ({ nodes: graph.nodes, links: graph.links }), [graph]);
 
@@ -228,17 +252,18 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
       
       // Color array for nodes based on type
       const colors: number[] = [];
-      const getNodeColor = (name: string, fallbackHex: number) => {
+      const getCSSColorAsThree = (name: string, fallbackHex: number) => {
         const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
         if (v) {
-        try { return new THREE.Color(v as string); } catch {}
+          try { return new THREE.Color(v as string); } catch {}
         }
         return new THREE.Color(fallbackHex);
       };
       
-      const accentBrown = getNodeColor("--accent-brown", 0x8b6b4a);
-      const accentBlue = getNodeColor("--accent", 0x3b82f6);
-      const accentGreen = getNodeColor("--accent-green", 0x22c55e);
+      const accentBrown = getCSSColorAsThree("--accent-brown", 0xd78736);
+      const accentBlue = getCSSColorAsThree("--accent", 0x60a5fa);
+      const accentGreen = getCSSColorAsThree("--accent-green", 0x86efac);
+      const accentPurple = getCSSColorAsThree("--accent-purple", 0xc084fc);
       const red = new THREE.Color(0xff0000);
       const white = new THREE.Color(0xffffff);
       
@@ -248,16 +273,21 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
         let color = white;
         
         if (node) {
-          // Check if it's a Tech N9ne related project (music node)
+          // Check if it's a Tech N9ne related project (music node) - special red
           if (node.type === "music" && node.label.toLowerCase().includes("tech n9ne")) {
             color = red;
-          } else if (node.type === "company" || node.type === "cred") {
-            // Companies and credentials (which include companies) = brown
+          } else if (node.type === "project" || node.type === "company") {
+            // Projects & companies = brown
             color = accentBrown;
-          } else if (node.type === "role" || node.type === "experience") {
-            color = accentBlue;
+          } else if (node.type === "music") {
+            // Music = purple
+            color = accentPurple;
           } else if (node.type === "skill") {
+            // Skills = green
             color = accentGreen;
+          } else if (node.type === "role" || node.type === "experience" || node.type === "cred") {
+            // Experience/roles/credentials = blue
+            color = accentBlue;
           }
         }
         
@@ -340,10 +370,29 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
         const cx = ev.clientX - rect.left;
         const cy = ev.clientY - rect.top;
         const hitId = selectNodeAt(ev.clientX, ev.clientY);
-        if (hitId) { isHoveringLabelRef.current = true; renderer.domElement.style.cursor = "pointer"; return; }
+        if (hitId) {
+          // If hovering a new node while locked, release lock
+          if (locked && locked.id !== hitId) setLocked(null);
+          isHoveringLabelRef.current = true; renderer.domElement.style.cursor = "pointer"; return;
+        }
         renderer.domElement.style.cursor = "grab";
         isHoveringLabelRef.current = false;
         setHover(null);
+      };
+      // Desktop click to lock/unlock
+      const onPointerUpDesktop = (ev: PointerEvent) => {
+        if (isTouchRef.current) return; // handled by mobile logic
+        if (isDragging) return;
+        const rect = renderer.domElement.getBoundingClientRect();
+        const cx = ev.clientX - rect.left;
+        const cy = ev.clientY - rect.top;
+        const hitId = selectNodeAt(ev.clientX, ev.clientY);
+        if (hitId) {
+          setLocked({ id: hitId, x: cx, y: cy });
+        } else {
+          // Clicked empty canvas -> clear lock
+          setLocked(null);
+        }
       };
       // Touch tap handling for mobile: toggle MobileTooltip anchored to top/bottom
       const onPointerDown = (ev: PointerEvent) => {
@@ -434,6 +483,7 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
       renderer.domElement.addEventListener("pointerleave", onPointerLeaveCanvas);
       renderer.domElement.addEventListener('pointerdown', onPointerDown, { passive: true } as any);
       renderer.domElement.addEventListener('pointerup', onPointerUp, { passive: true } as any);
+      renderer.domElement.addEventListener('pointerup', onPointerUpDesktop, { passive: true } as any);
       controls.addEventListener("start", () => { isDragging = true; setHover(null); isHoveringLabelRef.current = false; });
       controls.addEventListener("end", () => { isDragging = false; });
 
@@ -557,19 +607,33 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
 
   // Compute related nodes and current node data for tooltip
   const relatedNodes = useMemo(() => {
-    if (!hover) return [];
+    const id = isTouchDevice ? hover?.id : (hover?.id ?? locked?.id);
+    if (!id) return [];
     const ids = new Set<string>();
     for (const l of memo.links) {
-      if (l.source === hover.id) ids.add(l.target);
-      else if (l.target === hover.id) ids.add(l.source);
+      if (l.source === id) ids.add(l.target);
+      else if (l.target === id) ids.add(l.source);
     }
     return memo.nodes.filter((n) => ids.has(n.id));
-  }, [hover, memo]);
+  }, [hover, locked, memo, isTouchDevice]);
+
+  // Active selection for desktop: prefer hover; fall back to locked
+  const activeId = useMemo(() => {
+    if (isTouchDevice) return hover?.id ?? null;
+    return (hover?.id ?? locked?.id) ?? null;
+  }, [hover, locked, isTouchDevice]);
+
+  const activePos = useMemo(() => {
+    if (isTouchDevice) return hover ? { x: hover.x, y: hover.y } : null;
+    if (hover) return { x: hover.x, y: hover.y };
+    if (locked) return { x: locked.x, y: locked.y };
+    return null;
+  }, [hover, locked, isTouchDevice]);
 
   const currentNode = useMemo(() => {
-    if (!hover) return null;
-    return memo.nodes.find((n) => n.id === hover.id) || null;
-  }, [hover, memo]);
+    if (!activeId) return null;
+    return memo.nodes.find((n) => n.id === activeId) || null;
+  }, [activeId, memo]);
 
   // Mobile-specific current node derived from mobileSelectedId so tooltip
   // does not depend on transient `hover` state (which is cleared by pointermove)
@@ -594,6 +658,143 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
       className="relative w-full h-full select-none"
       style={{ WebkitUserSelect: 'none', userSelect: 'none', WebkitTouchCallout: 'none' as any }}
     >
+      {/* Controls help icon - Desktop */}
+      {ready && !isTouchDevice && (
+        <div className="absolute top-4 left-4 z-20">
+          <div 
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/60 backdrop-blur-sm ring-1 ring-white/20 cursor-help transition-all hover:bg-black/80 hover:ring-white/40"
+            onMouseEnter={() => setShowControlsTooltip(true)}
+            onMouseLeave={() => setShowControlsTooltip(false)}
+          >
+            {/* Camera icon */}
+            <svg className="w-4 h-4 text-white/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            <span className="text-xs text-white/70 font-medium">?</span>
+          </div>
+          
+          {/* Controls tooltip */}
+          {showControlsTooltip && (
+            <div className="absolute top-full left-0 mt-2 w-64 px-3 py-2.5 rounded-lg bg-black/90 backdrop-blur-sm ring-1 ring-white/20 text-xs text-white/80 space-y-3">
+              <div className="font-semibold text-white text-sm">Camera Controls</div>
+              <div className="space-y-1.5">
+                <div className="flex items-start gap-2">
+                  <span className="text-[color:var(--accent)] font-medium min-w-[60px]">Rotate:</span>
+                  <span>Click and drag</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-[color:var(--accent)] font-medium min-w-[60px]">Pan:</span>
+                  <span>Right-click drag or Shift + drag</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-[color:var(--accent)] font-medium min-w-[60px]">Zoom:</span>
+                  <span>Mouse wheel</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-[color:var(--accent-green)] font-medium min-w-[60px]">Select:</span>
+                  <span>Click node or label</span>
+                </div>
+              </div>
+              
+              <div className="pt-2 border-t border-white/10">
+                <div className="font-semibold text-white text-sm mb-1.5">Color Guide</div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-[color:var(--accent-brown)]" />
+                    <span className="text-[10px]">Projects & Companies</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-[color:var(--accent-purple)]" />
+                    <span className="text-[10px]">Music & Creative</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-[color:var(--accent-green)]" />
+                    <span className="text-[10px]">Skills & Tech</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-[color:var(--accent)]" />
+                    <span className="text-[10px]">Experience & Roles</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+      
+      {/* Controls help icon - Mobile */}
+      {ready && isTouchDevice && !mobileOpen && (
+        <div className="absolute top-4 left-4 z-20">
+          <button 
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/60 backdrop-blur-sm ring-1 ring-white/20 transition-all active:bg-black/80 active:ring-white/40"
+            onClick={() => setShowControlsTooltip(!showControlsTooltip)}
+          >
+            {/* Touch icon */}
+            <svg className="w-4 h-4 text-white/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
+            </svg>
+            <span className="text-xs text-white/70 font-medium">?</span>
+          </button>
+          
+          {/* Controls tooltip */}
+          {showControlsTooltip && (
+            <>
+              {/* Backdrop to close on tap outside */}
+              <div 
+                className="fixed inset-0 bg-black/20 backdrop-blur-sm z-10"
+                onClick={() => setShowControlsTooltip(false)}
+              />
+              <div className="absolute top-full left-0 mt-2 w-64 px-3 py-2.5 rounded-lg bg-black/90 backdrop-blur-sm ring-1 ring-white/20 text-xs text-white/80 space-y-3 z-20">
+                <div className="font-semibold text-white text-sm">Touch Controls</div>
+                <div className="space-y-1.5">
+                  <div className="flex items-start gap-2">
+                    <span className="text-[color:var(--accent)] font-medium min-w-[60px]">Rotate:</span>
+                    <span>Swipe with one finger</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-[color:var(--accent)] font-medium min-w-[60px]">Pan:</span>
+                    <span>Swipe with two fingers</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-[color:var(--accent)] font-medium min-w-[60px]">Zoom:</span>
+                    <span>Pinch to zoom in/out</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-[color:var(--accent-green)] font-medium min-w-[60px]">Select:</span>
+                    <span>Tap node or label</span>
+                  </div>
+                </div>
+                
+                <div className="pt-2 border-t border-white/10">
+                  <div className="font-semibold text-white text-sm mb-1.5">Color Guide</div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-[color:var(--accent-brown)]" />
+                      <span className="text-[10px]">Projects & Companies</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-[color:var(--accent-purple)]" />
+                      <span className="text-[10px]">Music & Creative</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-[color:var(--accent-green)]" />
+                      <span className="text-[10px]">Skills & Tech</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-[color:var(--accent)]" />
+                      <span className="text-[10px]">Experience & Roles</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-red-500" />
+                      <span className="text-[10px]">Tech N9ne / Strange Music</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
       {/* Debug info removed */}
       {/* Tooltip container to keep within viewport */}
       <TooltipStyles />
@@ -605,8 +806,17 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
           key={l.id}
           className="absolute text-[10px] text-white/70 whitespace-nowrap cursor-pointer hover:text-white transition-colors select-none"
           style={{ left: l.x, top: l.y, transform: "translate(-50%, -120%)", pointerEvents: 'auto' }}
-          onMouseEnter={() => { setHover({ id: l.id, label: l.label, type: l.type, x: l.x, y: l.y }); isHoveringLabelRef.current = true; }}
+          onMouseEnter={() => {
+            if (locked && locked.id !== l.id) setLocked(null);
+            setHover({ id: l.id, label: l.label, type: l.type, x: l.x, y: l.y });
+            isHoveringLabelRef.current = true;
+          }}
           onMouseLeave={() => { setHover(null); isHoveringLabelRef.current = false; }}
+          onClick={(e) => {
+            if (isTouchRef.current) return;
+            e.stopPropagation();
+            setLocked({ id: l.id, x: l.x, y: l.y });
+          }}
           onPointerDown={(e: any) => {
             // Record touch start for label taps (mobile). Do not stop propagation so drag still works.
             if (!isTouchRef.current) return;
@@ -650,10 +860,10 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
         </div>
       ))}
       {/* Desktop tooltip */}
-      {(!isTouchDevice && hover && currentNode) && (
-        <TooltipBox x={hover.x} y={hover.y}>
-          <div className="font-semibold text-[color:var(--accent)] text-sm">{hover.label}</div>
-          <div className="text-[10px] text-[color:var(--muted)] mt-0.5 capitalize">{hover.type}</div>
+      {(!isTouchDevice && activeId && activePos && currentNode) && (
+        <TooltipBox x={activePos.x} y={activePos.y} interactive={!!locked} innerRef={tooltipRef}>
+          <div className="font-semibold text-sm" style={{ color: getNodeTypeColor(currentNode.type) }}>{currentNode.label}</div>
+          <div className="text-[10px] text-[color:var(--muted)] mt-0.5 capitalize">{currentNode.type}</div>
           {currentNode.meta && (
             <div className="mt-3 space-y-2">
               {(currentNode.meta as any).description && (
@@ -675,6 +885,16 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
               {(currentNode.meta as any).impact && (
                 <div className="text-[10px] text-[color:var(--accent-brown)]"><span className="font-medium">Impact:</span> {(currentNode.meta as any).impact}</div>
               )}
+              {(currentNode.meta as any).keyChallenges && (
+                <div className="mt-2">
+                  <div className="text-[10px] text-[color:var(--accent-purple)] font-medium mb-1">Key Challenges</div>
+                  <div className="space-y-1">
+                    {(currentNode.meta as any).keyChallenges.map((challenge: string, i: number) => (
+                      <div key={i} className="text-[10px] text-white/70 leading-relaxed">• {challenge}</div>
+                    ))}
+                  </div>
+                </div>
+              )}
               {(currentNode.meta as any).proficiency && (
                 <div className="text-[10px]"><span className="font-medium text-[color:var(--muted)]">Proficiency:</span> <span className="text-[color:var(--accent)]">{(currentNode.meta as any).proficiency}</span></div>
               )}
@@ -693,6 +913,15 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
                     ))}
                   </ul>
                 </div>
+              )}
+              {(currentNode.meta as any).year && (
+                <div className="text-[10px] text-[color:var(--muted)] mt-2"><span className="font-medium">Year:</span> {(currentNode.meta as any).year}</div>
+              )}
+              {(currentNode.meta as any).role && (
+                <div className="text-[10px] text-[color:var(--accent-purple)] mt-1"><span className="font-medium">Role:</span> {(currentNode.meta as any).role}</div>
+              )}
+              {(currentNode.meta as any).genre && (
+                <div className="text-[10px] text-[color:var(--muted)] mt-1"><span className="font-medium">Genre:</span> {(currentNode.meta as any).genre}</div>
               )}
             </div>
           )}
@@ -718,16 +947,84 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
           anchor={mobileAnchor} 
           onClose={() => { setMobileOpen(false); setMobileAnchor(null); setMobileSelectedId(null); setHover(null); }}
         >
-          <div className="font-semibold text-[color:var(--accent)] text-sm">{mobileCurrentNode.label}</div>
+          <div className="font-semibold text-sm" style={{ color: getNodeTypeColor(mobileCurrentNode.type) }}>{mobileCurrentNode.label}</div>
           <div className="text-[10px] text-[color:var(--muted)] mt-0.5 capitalize">{mobileCurrentNode.type}</div>
           {mobileCurrentNode.meta && (
-            <div className="mt-3 space-y-2">{(mobileCurrentNode.meta as any).description}</div>
+            <div className="mt-3 space-y-2">
+              {(mobileCurrentNode.meta as any).description && (
+                <div className="text-[11px] leading-relaxed text-white/80">{(mobileCurrentNode.meta as any).description}</div>
+              )}
+              {((mobileCurrentNode.meta as any).stack || (mobileCurrentNode.meta as any).technologies) && (
+                <div className="mt-2">
+                  <div className="text-[10px] text-[color:var(--accent-green)] font-medium mb-1">{(mobileCurrentNode.meta as any).stack ? "Stack" : "Technologies"}</div>
+                  <div className="flex flex-wrap gap-1">
+                    {((mobileCurrentNode.meta as any).stack || (mobileCurrentNode.meta as any).technologies || []).map((tech: string, i: number) => (
+                      <span key={i} className="inline-block rounded bg-[color:var(--accent-green)]/20 px-1.5 py-0.5 text-[10px] text-[color:var(--accent-green)]">{tech}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {(mobileCurrentNode.meta as any).timeline && (
+                <div className="text-[10px] text-[color:var(--muted)]"><span className="font-medium">Timeline:</span> {(mobileCurrentNode.meta as any).timeline}</div>
+              )}
+              {(mobileCurrentNode.meta as any).impact && (
+                <div className="text-[10px] text-[color:var(--accent-brown)]"><span className="font-medium">Impact:</span> {(mobileCurrentNode.meta as any).impact}</div>
+              )}
+              {(mobileCurrentNode.meta as any).keyChallenges && (
+                <div className="mt-2">
+                  <div className="text-[10px] text-[color:var(--accent-purple)] font-medium mb-1">Key Challenges</div>
+                  <div className="space-y-1">
+                    {(mobileCurrentNode.meta as any).keyChallenges.map((challenge: string, i: number) => (
+                      <div key={i} className="text-[10px] text-white/70 leading-relaxed">• {challenge}</div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {(mobileCurrentNode.meta as any).proficiency && (
+                <div className="text-[10px]"><span className="font-medium text-[color:var(--muted)]">Proficiency:</span> <span className="text-[color:var(--accent)]">{(mobileCurrentNode.meta as any).proficiency}</span></div>
+              )}
+              {(mobileCurrentNode.meta as any).projects && Array.isArray((mobileCurrentNode.meta as any).projects) && (
+                <div className="mt-2">
+                  <div className="text-[10px] text-[color:var(--muted)] font-medium mb-1">Used in</div>
+                  <div className="flex flex-wrap gap-1">
+                    {(mobileCurrentNode.meta as any).projects.map((proj: string, i: number) => (
+                      <span key={i} className="inline-block rounded bg-white/10 px-1.5 py-0.5 text-[10px]">{proj}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {(mobileCurrentNode.meta as any).keyAchievements && (
+                <div className="mt-2">
+                  <div className="text-[10px] text-[color:var(--accent)] font-medium mb-1">Key Achievements</div>
+                  <div className="space-y-1">
+                    {(mobileCurrentNode.meta as any).keyAchievements.map((achievement: string, i: number) => (
+                      <div key={i} className="text-[10px] text-white/70 leading-relaxed">• {achievement}</div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {(mobileCurrentNode.meta as any).year && (
+                <div className="text-[10px] text-[color:var(--muted)] mt-2"><span className="font-medium">Year:</span> {(mobileCurrentNode.meta as any).year}</div>
+              )}
+              {(mobileCurrentNode.meta as any).role && (
+                <div className="text-[10px] text-[color:var(--accent-purple)] mt-1"><span className="font-medium">Role:</span> {(mobileCurrentNode.meta as any).role}</div>
+              )}
+              {(mobileCurrentNode.meta as any).genre && (
+                <div className="text-[10px] text-[color:var(--muted)] mt-1"><span className="font-medium">Genre:</span> {(mobileCurrentNode.meta as any).genre}</div>
+              )}
+            </div>
           )}
           {mobileRelatedNodes.length > 0 && (
             <div className="mt-3 pt-3 border-t border-white/10">
-              {mobileRelatedNodes.slice(0,6).map((n) => (
-                <div key={n.id} className="inline-block rounded bg-white/10 px-2 py-1 text-[10px] mr-1">{n.label}</div>
-              ))}
+              <div className="text-[10px] text-[color:var(--muted)] mb-1.5 font-medium">Related Connections</div>
+              <div className="flex flex-wrap gap-1">
+                {mobileRelatedNodes.slice(0,6).map((n) => (
+                  <div key={n.id} className="inline-block rounded bg-white/10 px-2 py-1 text-[10px]">{n.label}</div>
+                ))}
+                {mobileRelatedNodes.length > 6 && (
+                  <span className="text-[10px] text-[color:var(--muted)]">+{mobileRelatedNodes.length - 6} more</span>
+                )}
+              </div>
             </div>
           )}
         </MobileTooltip>
@@ -736,7 +1033,7 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
   );
 }
 
-function TooltipBox({ x, y, children }: { x: number; y: number; children: React.ReactNode }) {
+function TooltipBox({ x, y, children, interactive = false, innerRef }: { x: number; y: number; children: React.ReactNode; interactive?: boolean; innerRef?: React.Ref<HTMLDivElement> }) {
   // Compute clamped position with smart flipping near edges
   const PADDING = 12;
   const MAX_W = 480; // matches max-w-md
@@ -759,10 +1056,27 @@ function TooltipBox({ x, y, children }: { x: number; y: number; children: React.
       transform = "translate(-100%, 0)";
     }
 
-    // Flip vertically if exceeding bottom edge
+    // Flip vertically if exceeding bottom edge, but only if there's room above
     if (top + MAX_H + PADDING > vh) {
-      top = Math.max(PADDING, y - PADDING);
-      transform = transform.includes("-100%") ? "translate(-100%, -100%)" : "translate(0, -100%)";
+      const flippedTop = y - PADDING;
+      // Check if flipping upward would go off the top
+      if (flippedTop >= PADDING) {
+        // Safe to flip above
+        top = flippedTop;
+        transform = transform.includes("-100%") ? "translate(-100%, -100%)" : "translate(0, -100%)";
+      }
+      // Otherwise keep it below and let clamping handle it
+    }
+
+    // Additionally check if we're too close to top edge (when tooltip renders above by default or gets flipped)
+    if (transform.includes("translateY(-100%)") || transform.includes("translate(-100%, -100%)") || transform.includes("translate(0, -100%)")) {
+      // Tooltip is flipped upward, check if it would go off top
+      const estimatedHeight = MAX_H;
+      if (top - estimatedHeight < PADDING) {
+        // Would go off top, flip it back down
+        top = y + PADDING;
+        transform = transform.includes("translateX(-100%)") || transform.includes("translate(-100%") ? "translate(-100%, 0)" : "translate(0, 0)";
+      }
     }
 
     // Clamp to viewport
@@ -772,8 +1086,10 @@ function TooltipBox({ x, y, children }: { x: number; y: number; children: React.
 
   return (
     <div
-      className="pointer-events-none absolute rounded-lg bg-black/90 px-4 py-3 text-xs ring-1 ring-white/20 z-10 max-w-md backdrop-blur-sm"
+      ref={innerRef as any}
+      className={`${interactive ? 'pointer-events-auto' : 'pointer-events-none'} absolute rounded-lg bg-black/90 px-4 py-3 text-xs ring-1 ring-white/20 z-10 max-w-md backdrop-blur-sm`}
       style={{ left, top, transform, maxHeight: MAX_H, overflowY: 'auto' as const, minWidth: MIN_W, maxWidth: 'min(480px, calc(100vw - 24px))' }}
+      onPointerDown={interactive ? (e) => { e.stopPropagation(); } : undefined}
     >
       {children}
     </div>
@@ -783,5 +1099,3 @@ function TooltipBox({ x, y, children }: { x: number; y: number; children: React.
 function TooltipStyles() {
   return null;
 }
-
-

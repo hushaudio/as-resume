@@ -1,13 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  /* Theme: green, brown, blue */
+  /* Theme: green, brown, blue, purple */
   --color-background: #0b0f0c; /* deep near-black with green tint */
   --color-foreground: #e8f1ea; /* subtle greenish white */
   --muted: #9aa79c; /* green-gray */
   --accent: #60a5fa; /* blue */
   --accent-green: #86efac; /* green */
   --accent-brown: #d78736; /* brown (earthy) */
+  --accent-purple: #c084fc; /* purple */
 }
 
 @layer utilities {
@@ -15,6 +16,7 @@
   .text-accent { color: var(--accent) }
   .text-accent-green { color: var(--accent-green) }
   .text-accent-brown { color: var(--accent-brown) }
+  .text-accent-purple { color: var(--accent-purple) }
 }
 
 html,body { height:100% }

@@ -7,7 +7,7 @@
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
-    "deploy": "rsync -avz --delete --exclude 'node_modules' ./ root@143.110.226.194:/root/as-resume",
+    "deploy": "rsync -avz --delete --exclude 'node_modules' --exclude '.git' ./ root@143.110.226.194:/root/as-resume",
     "server": "ssh root@143.110.226.194"
   },
   "dependencies": {
