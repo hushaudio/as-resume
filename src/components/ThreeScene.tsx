@@ -851,8 +851,8 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
       
       {/* Controls help icon - Mobile */}
       {ready && isTouchDevice && !mobileOpen && (
-        <div className="absolute top-4 left-4 z-20">
-          <button 
+        <div className="absolute top-16 right-4 z-20">
+          <button
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/60 backdrop-blur-sm ring-1 ring-white/20 transition-all active:bg-black/80 active:ring-white/40"
             onClick={() => setShowControlsTooltip(!showControlsTooltip)}
           >
@@ -862,39 +862,51 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
             </svg>
             <span className="text-xs text-white/70 font-medium">?</span>
           </button>
-          
+
           {/* Controls tooltip */}
           {showControlsTooltip && (
             <>
               {/* Backdrop to close on tap outside */}
-              <div 
+              <div
                 className="fixed inset-0 bg-black/20 backdrop-blur-sm z-10"
                 onClick={() => setShowControlsTooltip(false)}
               />
-              <div className="absolute top-full left-0 mt-2 w-64 px-3 py-2.5 rounded-lg bg-black/90 backdrop-blur-sm ring-1 ring-white/20 text-xs text-white/80 space-y-3 z-20">
-                <div className="font-semibold text-white text-sm">Touch Controls</div>
-                <div className="space-y-1.5">
+              <div className={`w-72 px-3 py-2.5 rounded-lg bg-black/90 backdrop-blur-sm ring-1 ring-white/20 text-xs text-white/80 space-y-3 z-20 ${
+                isTouchDevice
+                  ? 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 max-w-[90vw]'
+                  : 'absolute bottom-full right-0 mb-2'
+              }`}>
+                <div className="font-semibold text-white text-sm">Three.js Camera Controls</div>
+                <div className="space-y-2">
                   <div className="flex items-start gap-2">
-                    <span className="text-[color:var(--accent)] font-medium min-w-[60px]">Rotate:</span>
-                    <span>Swipe with one finger</span>
+                    <span className="text-[color:var(--accent)] font-medium min-w-[80px]">Orbit:</span>
+                    <span>One finger drag to rotate camera around center</span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <span className="text-[color:var(--accent)] font-medium min-w-[60px]">Pan:</span>
-                    <span>Swipe with two fingers</span>
+                    <span className="text-[color:var(--accent)] font-medium min-w-[80px]">Pan:</span>
+                    <span>Two finger drag to move camera position</span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <span className="text-[color:var(--accent)] font-medium min-w-[60px]">Zoom:</span>
-                    <span>Pinch to zoom in/out</span>
+                    <span className="text-[color:var(--accent)] font-medium min-w-[80px]">Zoom:</span>
+                    <span>Pinch with two fingers to zoom in/out</span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <span className="text-[color:var(--accent-green)] font-medium min-w-[60px]">Select:</span>
-                    <span>Tap node or label</span>
+                    <span className="text-[color:var(--accent)] font-medium min-w-[80px]">Dolly:</span>
+                    <span>Two finger vertical swipe to move closer/farther</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-[color:var(--accent-green)] font-medium min-w-[80px]">Select:</span>
+                    <span>Tap node or label to open details</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-orange-400 font-medium min-w-[80px]">Explore:</span>
+                    <span>Drag with tooltip open to explore connections</span>
                   </div>
                 </div>
-                
+
                 <div className="pt-2 border-t border-white/10">
-                  <div className="font-semibold text-white text-sm mb-1.5">Color Guide</div>
-                  <div className="space-y-1">
+                  <div className="font-semibold text-white text-sm mb-1.5">Node Colors</div>
+                  <div className="grid grid-cols-2 gap-1">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-[color:var(--accent-brown)]" />
                       <span className="text-[10px]">Projects & Companies</span>
@@ -911,7 +923,7 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
                       <div className="w-2 h-2 rounded-full bg-[color:var(--accent)]" />
                       <span className="text-[10px]">Experience & Roles</span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="col-span-2 flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-red-500" />
                       <span className="text-[10px]">Tech N9ne / Strange Music</span>
                     </div>

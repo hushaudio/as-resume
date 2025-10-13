@@ -20,7 +20,7 @@ const data = {
   whatIDo: [
     "Product engineering: building production applications and native tools across web, desktop, and mobile",
     "AI/ML systems: end-to-end pipelines across audio, text, image, and video — C++/JUCE, ONNX, Transformers/Hugging Face, local and cloud inference. Trained 1000+ models spanning text, image, and audio generation",
-    "Performance & analytics: instrumentation, SEO-aware frontend engineering, performance budgets and Core Web Vitals; practical experience running A/B tests when needed",
+    "Performance & analytics: instrumentation, SEO-aware frontend engineering, performance budgets and Core Web Vitals",
     "Live systems & shows: MIDI/MTC, Max devices, clocking networks, and hardened fail-safe stage rigs",
   ],
   experience: [

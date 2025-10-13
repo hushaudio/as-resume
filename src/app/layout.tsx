@@ -16,12 +16,34 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Aaron Shier | Senior Developer & Creative Engineer",
   description:
-    "Engineer-artist who unfolds solutions where there’s no template—and ships them reliable.",
+    "Engineer-artist who unfolds solutions where there's no template—and ships them reliable.",
+  icons: {
+    icon: [
+      { url: "/favicon-dark.png", media: "(prefers-color-scheme: light)", sizes: "32x32" },
+      { url: "/favicon-light.png", media: "(prefers-color-scheme: dark)", sizes: "32x32" },
+    ],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        {/* Comprehensive favicon support for crisp rendering */}
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-light.png" media="(prefers-color-scheme: light)" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-dark.png" media="(prefers-color-scheme: dark)" />
+        {/* Fallback for browsers that don't support media queries */}
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-dark.png" />
+        {/* Apple touch icons */}
+        <link rel="apple-touch-icon" sizes="180x180" href="/favicon-light.png" media="(prefers-color-scheme: light)" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/favicon-dark.png" media="(prefers-color-scheme: dark)" />
+        {/* Windows tile */}
+        <meta name="msapplication-TileColor" content="#0A0A0A" />
+        <meta name="msapplication-TileImage" content="/favicon-dark.png" />
+        {/* Theme color */}
+        <meta name="theme-color" content="#0A0A0A" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)" />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {/* Transparent floating nav */}
         <div className="fixed top-4 left-0 right-0 z-50 pointer-events-none">

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" aria-label="HUSH sigil favicon" role="img">
+  <defs>
+    <clipPath id="badgeClip">
+      <circle cx="128" cy="128" r="120"/>
+    </clipPath>
+  </defs>
+  <!-- Background badge -->
+  <rect width="256" height="256" fill="#0A0A0A"/>
+  <g clip-path="url(#badgeClip)">
+    <circle cx="128" cy="128" r="120" fill="#0A0A0A" stroke="#FAFAFA" stroke-width="8"/>
+    <!-- Crescent moon (left upper quadrant) -->
+    <g transform="translate(64,44) scale(0.9)">
+      <circle cx="0" cy="0" r="18" fill="#FAFAFA"/>
+      <circle cx="6" cy="0" r="18" fill="#0A0A0A"/>
+    </g>
+    <!-- Crown (top center, minimalist three-point) -->
+    <path d="M108 46 L118 66 L128 52 L138 66 L148 46 Z" fill="#FAFAFA"/>
+    <!-- Monogram H base (two pillars) -->
+    <rect x="90" y="76" width="16" height="96" rx="4" fill="#FAFAFA"/>
+    <rect x="150" y="76" width="16" height="96" rx="4" fill="#FAFAFA"/>
+    <!-- Lightning crossbar as filled bolt -->
+    <path d="M145 96 L110 116 L130 118 L112 148 L152 126 L134 124 Z" fill="#FAFAFA"/>
+    <!-- Stitched line (sewn mouth) under H -->
+    <rect x="92" y="182" width="72" height="10" rx="5" fill="#FAFAFA"/>
+    <g fill="#0A0A0A">
+      <rect x="98" y="183" width="6" height="8" rx="2"/>
+      <rect x="112" y="183" width="6" height="8" rx="2"/>
+      <rect x="126" y="183" width="6" height="8" rx="2"/>
+      <rect x="140" y="183" width="6" height="8" rx="2"/>
+      <rect x="154" y="183" width="6" height="8" rx="2"/>
+    </g>
+  </g>
+</svg>
