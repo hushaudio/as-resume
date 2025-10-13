@@ -210,7 +210,7 @@ const graphMetadata = {
       proficiency: "Expert"
     },
     "Next.js": {
-      description: "6+ years building SEO-optimized, server-rendered applications. Implemented for Hungryroot's landing pages achieving green Core Web Vitals. Used in The Oracle for SSR astrology charts.",
+      description: "6+ years building SEO-optimized, server-rendered applications. Implemented for 565 Media's website and landing pages achieving green Core Web Vitals.",
       projects: ["The Oracle", "565 Media landing pages"],
       proficiency: "Advanced"
     },
@@ -616,7 +616,7 @@ export default function Graph() {
       companies: [
         { key: "Audialab", skills: ["C++", "JUCE", "Python", "React", "ONNX", "DSP"] },
         { key: "565 Media", skills: ["React", "Next.js", "Node.js", "Strapi", "WordPress", "Klaviyo", "Twilio", "DigitalOcean", "Docker", "Nginx", "CI/CD"] },
-        { key: "Hungryroot", skills: ["EJS", "Node.js", "React", "Next.js", "Nginx", "CI/CD", "DevOps"] },
+        { key: "Hungryroot", skills: ["EJS", "Node.js", "Nginx", "DevOps"] },
         { key: "OneShotMove", skills: ["React", "Next.js", "Node.js", "TypeScript", "CI/CD"] },
         { key: "Ric Wake / RB-360", skills: ["Max for Live", "MIDI/MTC"] },
         { key: "Oberha5li Studios", skills: ["Unreal Engine 5"] },

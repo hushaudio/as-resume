@@ -27,6 +27,12 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
   const tooltipRef = useRef<HTMLDivElement | null>(null);
   const [showControlsTooltip, setShowControlsTooltip] = useState(false);
   const [videoPopup, setVideoPopup] = useState<{ src: string; linkText: string; description?: string; linkColor?: string } | null>(null);
+  // Track active node for edge highlighting
+  const activeNodeIdRef = useRef<string | null>(null);
+  // Track if dragging occurred during current interaction
+  const dragOccurredRef = useRef(false);
+  // Track initial pointer position for drag detection
+  const initialPointerPosRef = useRef<{ x: number; y: number } | null>(null);
   // debugInfo removed
   
   useEffect(() => {
@@ -304,21 +310,35 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
       const points = new THREE.Points(pointGeo, pointMat);
       scene.add(points);
 
-      // Lines for links
-      const linePositions: number[] = [];
-      for (const l of memo.links) {
-        const ai = idToIndex.get(l.source);
-        const bi = idToIndex.get(l.target);
-        if (ai == null || bi == null) continue;
-        const a3 = ai * 3;
-        const b3 = bi * 3;
-        linePositions.push(
-          positions[a3], positions[a3 + 1], positions[a3 + 2],
-          positions[b3], positions[b3 + 1], positions[b3 + 2]
-        );
-      }
-      const lineGeo = new THREE.BufferGeometry();
-      lineGeo.setAttribute("position", new THREE.Float32BufferAttribute(linePositions, 3));
+      // Lines for links - separate highlighted and regular edges
+      const createEdgeGeometry = (activeNodeId: string | null) => {
+        const highlightedPositions: number[] = [];
+        const regularPositions: number[] = [];
+
+        for (const l of memo.links) {
+          const ai = idToIndex.get(l.source);
+          const bi = idToIndex.get(l.target);
+          if (ai == null || bi == null) continue;
+          const a3 = ai * 3;
+          const b3 = bi * 3;
+          const edgePositions = [
+            positions[a3], positions[a3 + 1], positions[a3 + 2],
+            positions[b3], positions[b3 + 1], positions[b3 + 2]
+          ];
+
+          // Check if this edge connects to the active node
+          const isConnected = activeNodeId && (l.source === activeNodeId || l.target === activeNodeId);
+
+          if (isConnected) {
+            highlightedPositions.push(...edgePositions);
+          } else {
+            regularPositions.push(...edgePositions);
+          }
+        }
+
+        return { highlightedPositions, regularPositions };
+      };
+
       // Use theme colors from CSS variables
       const getCSSColor = (name: string, fallback: number) => {
         const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -326,10 +346,56 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
         const c = new THREE.Color(v as string);
         return c.getHex();
       };
-      const lineColor = getCSSColor("--accent-brown", 0x8b6b4a);
-      const lineMat = new THREE.LineBasicMaterial({ color: lineColor, transparent: true, opacity: 0.2 });
-      const lines = new THREE.LineSegments(lineGeo, lineMat);
-      scene.add(lines);
+
+      // Edge objects for dynamic highlighting
+      let highlightedLines: any;
+      let regularLines: any;
+      let currentHighlightedNodeId: string | null = null;
+
+      const updateEdgeHighlighting = (activeNodeId: string | null) => {
+        // Remove existing edge objects
+        if (highlightedLines) {
+          scene.remove(highlightedLines);
+          highlightedLines.geometry.dispose();
+          (highlightedLines.material as any).dispose();
+        }
+        if (regularLines) {
+          scene.remove(regularLines);
+          regularLines.geometry.dispose();
+          (regularLines.material as any).dispose();
+        }
+
+        // Create new edge geometries
+        const { highlightedPositions, regularPositions } = createEdgeGeometry(activeNodeId);
+
+        // Highlighted edges (white, higher opacity)
+        const highlightedLineGeo = new THREE.BufferGeometry();
+        if (highlightedPositions.length > 0) {
+          highlightedLineGeo.setAttribute("position", new THREE.Float32BufferAttribute(highlightedPositions, 3));
+        }
+        const highlightedLineMat = new THREE.LineBasicMaterial({
+          color: 0xffffff,
+          transparent: true,
+          opacity: 0.6
+        });
+        highlightedLines = new THREE.LineSegments(highlightedLineGeo, highlightedLineMat);
+        scene.add(highlightedLines);
+
+        // Regular edges (theme color, lower opacity)
+        const regularLineGeo = new THREE.BufferGeometry();
+        if (regularPositions.length > 0) {
+          regularLineGeo.setAttribute("position", new THREE.Float32BufferAttribute(regularPositions, 3));
+        }
+        const lineColor = getCSSColor("--accent-brown", 0x8b6b4a);
+        const regularLineMat = new THREE.LineBasicMaterial({ color: lineColor, transparent: true, opacity: 0.2 });
+        regularLines = new THREE.LineSegments(regularLineGeo, regularLineMat);
+        scene.add(regularLines);
+
+        currentHighlightedNodeId = activeNodeId;
+      };
+
+      // Initialize with no highlighting
+      updateEdgeHighlighting(null);
 
       // Hover/tap picking
       const raycaster = new THREE.Raycaster();
@@ -381,7 +447,6 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
       // Desktop click to lock/unlock
       const onPointerUpDesktop = (ev: PointerEvent) => {
         if (isTouchRef.current) return; // handled by mobile logic
-        // If drag occurred, lock was already cleared in controls 'start'.
         const rect = renderer.domElement.getBoundingClientRect();
         const cx = ev.clientX - rect.left;
         const cy = ev.clientY - rect.top;
@@ -389,9 +454,13 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
         if (hitId) {
           setLocked({ id: hitId, x: cx, y: cy });
         } else {
-          // Clicked empty canvas -> clear lock
-          setLocked(null);
+          // Clicked empty canvas -> only clear lock if no dragging occurred
+          if (!dragOccurredRef.current) {
+            setLocked(null);
+          }
         }
+        // Clean up
+        initialPointerPosRef.current = null;
       };
       // Touch tap handling for mobile: toggle MobileTooltip anchored to top/bottom
       const onPointerDown = (ev: PointerEvent) => {
@@ -401,11 +470,28 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
         touchStartRef.current = { x: ev.clientX, y: ev.clientY, time: performance.now() };
       };
 
-      // Desktop: if pressing on empty canvas, clear lock immediately
+      // Desktop: reset drag tracking on pointer down
       const onPointerDownDesktop = (ev: PointerEvent) => {
         if (isTouchRef.current) return;
-        const hitId = selectNodeAt(ev.clientX, ev.clientY);
-        if (!hitId) setLocked(null);
+        // Reset drag tracking for this interaction
+        dragOccurredRef.current = false;
+        // Record initial pointer position for drag detection
+        initialPointerPosRef.current = { x: ev.clientX, y: ev.clientY };
+        // Don't clear lock immediately - wait for pointer up to decide
+      };
+
+      // Track pointer movement to detect dragging
+      const onPointerMoveDesktop = (ev: PointerEvent) => {
+        if (isTouchRef.current || !initialPointerPosRef.current) return;
+
+        const dx = ev.clientX - initialPointerPosRef.current.x;
+        const dy = ev.clientY - initialPointerPosRef.current.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // If moved more than 5 pixels, consider it a drag
+        if (distance > 5 && !dragOccurredRef.current) {
+          dragOccurredRef.current = true;
+        }
       };
 
       const onPointerUp = (ev: PointerEvent) => {
@@ -421,7 +507,8 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
         const TAP_MAX_DIST_SQ = 15 * 15; // More forgiving threshold
         const TAP_MAX_DT = 500; // More time for slower taps
         if (distSq > TAP_MAX_DIST_SQ || dt > TAP_MAX_DT) {
-          // Treat as drag; do nothing so OrbitControls handles it
+          // Treat as drag; maintain current mobile tooltip state to preserve edge highlighting
+          // Don't clear or update mobile tooltip state during drag operations
           return;
         }
 
@@ -491,10 +578,14 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
       renderer.domElement.addEventListener('pointerup', onPointerUp, { passive: true } as any);
       renderer.domElement.addEventListener('pointerup', onPointerUpDesktop, { passive: true } as any);
       renderer.domElement.addEventListener('pointerdown', onPointerDownDesktop, { passive: true } as any);
+      renderer.domElement.addEventListener('pointermove', onPointerMoveDesktop, { passive: true } as any);
       controls.addEventListener("start", () => {
         isDragging = true;
-        setHover(null);
-        setLocked(null); // unpin when user starts rotating the camera
+        dragOccurredRef.current = true; // Mark that dragging occurred
+        // Only clear hover on desktop, not mobile (mobile uses separate tooltip state)
+        if (!isTouchRef.current) {
+          setHover(null);
+        }
         isHoveringLabelRef.current = false;
       });
       controls.addEventListener("end", () => { isDragging = false; });
@@ -559,6 +650,12 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
         // Update controls AFTER auto-rotation (if any)
         controls.update();
 
+        // Update edge highlighting if active node changed
+        const currentActiveNodeId = activeNodeIdRef.current;
+        if (currentActiveNodeId !== currentHighlightedNodeId) {
+          updateEdgeHighlighting(currentActiveNodeId);
+        }
+
         renderer.render(scene, camera);
         
         // Project 3D positions to screen for persistent labels
@@ -603,11 +700,11 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
         renderer.domElement.removeEventListener('pointerup', onPointerUp as any);
         renderer.domElement.removeEventListener('pointerdown', onPointerDownDesktop as any);
         renderer.domElement.removeEventListener('pointerup', onPointerUpDesktop as any);
+        renderer.domElement.removeEventListener('pointermove', onPointerMoveDesktop as any);
         scene.clear();
         pointGeo.dispose();
-        lineGeo.dispose();
         (pointMat as any).dispose?.();
-        (lineMat as any).dispose?.();
+        // Edge objects are disposed dynamically in updateEdgeHighlighting
         renderer.dispose();
         renderer.domElement?.remove();
       };
@@ -636,6 +733,22 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
     if (isTouchDevice) return hover?.id ?? null;
     return (locked?.id ?? hover?.id) ?? null;
   }, [hover, locked, isTouchDevice]);
+
+  // Update active node ref for edge highlighting
+  useEffect(() => {
+    activeNodeIdRef.current = activeId;
+  }, [activeId]);
+
+  // For mobile, maintain hover state when tooltip is open to preserve edge highlighting
+  useEffect(() => {
+    if (isTouchDevice && mobileSelectedId && !hover) {
+      // If mobile tooltip is open but hover is cleared, restore hover for edge highlighting
+      const node = memo.nodes.find(n => n.id === mobileSelectedId);
+      if (node) {
+        setHover({ id: node.id, label: node.label, type: node.type, x: 0, y: 0 });
+      }
+    }
+  }, [isTouchDevice, mobileSelectedId, hover, memo.nodes]);
 
   const activePos = useMemo(() => {
     if (isTouchDevice) return hover ? { x: hover.x, y: hover.y } : null;
