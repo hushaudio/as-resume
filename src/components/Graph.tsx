@@ -45,11 +45,11 @@ const data = {
     {
       title: "Contract Engineer",
       company: "565 Media",
-      years: "2016–Present",
+      years: "2015–Present",
       bullets: [
-        "Built solutions for 30+ marketing clients using Klaviyo, Google APIs, Strapi, WordPress, Twilio, and DigitalOcean.",
+        "Built solutions for 30+ marketing clients using Klaviyo, Google APIs,Twilio, Google Analytics, Google Tag Manager, Facebook Pixels, .",
         "Modular LP system powering UA at scale for Hungryroot (early stage → ~$1B valuation).",
-        "Built and managed 565media.com (Node.js/Strapi/Next.js); previously custom WordPress theme.",
+        "Built and managed 565media.com (Node.js/Strapi/Next.js); previously custom WordPress theme from.",
         "Continuous A/B tests, clean event schemas, SEO-aware React/Next builds, CI/CD; green Web Vitals.",
       ],
       link: "https://565media.com"
@@ -622,6 +622,31 @@ export default function Graph() {
         { key: "Oberha5li Studios", skills: ["Unreal Engine 5"] },
         { key: "Iowa COVID County Tracker", skills: ["React", "Next.js", "TypeScript", "Node.js", "CI/CD"] },
       ],
+      // NEW: Project to Company relationships
+      projectCompanies: [
+        { key: "DeepSampler2", company: "Audialab" },
+        { key: "Interloper", company: "Audialab" },
+        { key: "Audialab Engine", company: "Audialab" },
+      ],
+      // NEW: Role to Skill relationships
+      roleSkills: [
+        { key: "Founding Engineer", skills: ["C++", "JUCE", "Python", "React", "ONNX", "DSP"] },
+        { key: "Contract Engineer", skills: ["React", "Next.js", "Node.js", "Docker", "CI/CD"] },
+        { key: "Full-Stack Engineer", skills: ["React", "Next.js", "Node.js", "TypeScript"] },
+        { key: "Consulting Engineer", skills: ["Max for Live", "MIDI/MTC"] },
+        { key: "UE5/Game Tech (Consult)", skills: ["Unreal Engine 5"] },
+        { key: "Founder", skills: ["React", "Next.js", "TypeScript", "Node.js"] },
+      ],
+      // NEW: Music to Skill relationships
+      musicSkills: [
+        { key: "Strange Music", skills: ["DSP", "MIDI/MTC"] },
+        { key: "W.H.A.T. — Tech N9ne, HU$H, Kim Dracula", skills: ["DSP", "MIDI/MTC"] },
+        { key: "BLIGHT — Tech N9ne, HU$H", skills: ["DSP", "MIDI/MTC"] },
+        { key: "Iron Man 3 soundtrack credit", skills: ["DSP", "MIDI/MTC"] },
+        { key: "SiriusXM BPM remixes", skills: ["DSP", "MIDI/MTC"] },
+        { key: "Kazoo Kid remix (with Mike Diva)", skills: ["DSP", "MIDI/MTC"] },
+        { key: "Orgy — 'Talk Sick', 'Monster in Me'", skills: ["DSP", "MIDI/MTC"] },
+      ],
     } as const;
 
     // Build lookup by label for existing nodes
@@ -675,6 +700,33 @@ export default function Graph() {
       for (const s of r.skills) {
         const sid = labelToId.get(s);
         if (sid) addLink(sid, companyId);
+      }
+    }
+
+    // Apply project → company relationships
+    for (const r of linkRules.projectCompanies) {
+      const projectId = labelToId.get(r.key);
+      const companyId = labelToId.get(r.company);
+      if (projectId && companyId) addLink(projectId, companyId);
+    }
+
+    // Apply role → skill relationships
+    for (const r of linkRules.roleSkills) {
+      const roleId = labelToId.get(r.key);
+      if (!roleId) continue;
+      for (const s of r.skills) {
+        const sid = labelToId.get(s);
+        if (sid) addLink(sid, roleId);
+      }
+    }
+
+    // Apply music → skill relationships
+    for (const r of linkRules.musicSkills) {
+      const musicId = labelToId.get(r.key);
+      if (!musicId) continue;
+      for (const s of r.skills) {
+        const sid = labelToId.get(s);
+        if (sid) addLink(sid, musicId);
       }
     }
 

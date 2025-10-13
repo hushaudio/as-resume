@@ -16,7 +16,7 @@ const data = {
     "Iron Man 3",
   ],
   about:
-    "I build the bridge from prototype to production across web/app (Next.js, React Native), audio DSP/JUCE (C++), and local-AI (Python/ONNX). I scope constraints fast, ship reliable systems, and harden them for live shows or large-scale traffic—often with analytics/CRO baked in.",
+    "I build the bridge from prototype to production across web/mobile (Next.js, React Native), audio DSP/JUCE (C++), and local-AI (Python/ONNX). I scope constraints fast, ship reliable systems, and harden them for live shows or large-scale traffic—often with analytics/CRO baked in.",
   whatIDo: [
     "Product engineering: building production applications and native tools across web, desktop, and mobile",
     "AI/ML systems: end-to-end pipelines across audio, text, image, and video — C++/JUCE, ONNX, Transformers/Hugging Face, local and cloud inference. Trained 1000+ models spanning text, image, and audio generation",
@@ -45,12 +45,12 @@ const data = {
     {
       title: "Contract Engineer",
       company: "565 Media",
-      years: "2016–Present",
+      years: "2015–Present",
       bullets: [
-        "Built solutions for 30+ marketing clients using Klaviyo, Google APIs, Strapi, WordPress, Twilio, and DigitalOcean.",
+        "Built solutions for 30+ marketing clients using Klaviyo, Google APIs, Twilio, Google Analytics (Multiple Generations), Google Tag Manager, Facebook Pixels, Mailchimp, HubSpot, SendGrid, Zapier, WordPress, Shopify, WooCommerce, and more.",
         "Modular LP system powering UA at scale for Hungryroot (early stage → ~$1B valuation).",
-        "Built and managed 565media.com (Node.js/Strapi/Next.js); previously custom WordPress theme.",
-        "Continuous A/B tests, clean event schemas, SEO-aware React/Next builds, CI/CD; green Web Vitals.",
+        "Built and managed 565media.com (Node.js/Strapi/Next.js); previously a custom WordPress theme I created for them in 2015.",
+        "SEO-aware React/Next/EJS/Wordpress landing pages and websites, performance optimizations, analytics instrumentation, and technical delivery supporting high-scale marketing and paid acquisition.",
       ],
       link: "https://565media.com"
     },
