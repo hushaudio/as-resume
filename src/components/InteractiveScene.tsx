@@ -105,10 +105,10 @@ export default function InteractiveScene({ graph }: { graph: GraphData }) {
   }, []);
 
   return (
-    <div ref={containerRef} className="relative w-full h-full overflow-hidden" style={{ width: '100vw', height: '100vh' }}>
+    <div ref={containerRef} className="relative w-full h-full overflow-hidden text-[var(--color-foreground)]" style={{ width: '100vw', height: '100vh' }}>
       {mounted && canWebGL ? (
         <Suspense
-          fallback={<div className="absolute inset-0 grid place-items-center text-sm text-[color:var(--muted)]">Preparing 3D…</div>}
+          fallback={<div className="absolute inset-0 grid place-items-center text-sm text-[var(--muted)]">Preparing 3D…</div>}
         >
           <ThreeScene graph={graph} />
         </Suspense>
@@ -120,7 +120,7 @@ export default function InteractiveScene({ graph }: { graph: GraphData }) {
             height="100%"
             role="img"
             aria-label="Knowledge graph"
-            style={{ touchAction: "none", cursor: draggingRef.current ? "grabbing" : "grab" }}
+            style={{ touchAction: "none", cursor: draggingRef.current ? "grabbing" : "grab", color: 'var(--color-foreground)' }}
             onWheel={(e) => {
               e.preventDefault();
               const k = Math.sign(e.deltaY) * 0.1;
@@ -158,7 +158,7 @@ export default function InteractiveScene({ graph }: { graph: GraphData }) {
             <g
               transform={`translate(${layout.width / 2}, ${layout.height / 2}) rotate(${angleDeg}) scale(${zoom}) translate(${-layout.width / 2}, ${-layout.height / 2})`}
             >
-              <g stroke="white" strokeOpacity="0.15">
+              <g stroke="currentColor" strokeOpacity="0.12">
                 {layout.edges.map(([a, b], i) => (
                   <line key={i} x1={a.x} y1={a.y} x2={b.x} y2={b.y} />
                 ))}
@@ -170,7 +170,7 @@ export default function InteractiveScene({ graph }: { graph: GraphData }) {
                     cx={n.x}
                     cy={n.y}
                     r={5}
-                    fill="white"
+                    fill="currentColor"
                     onMouseEnter={(e) => setHover({ id: n.id, label: n.label, ...toLocal(e, e.clientX, e.clientY) })}
                     onMouseMove={(e) => setHover({ id: n.id, label: n.label, ...toLocal(e, e.clientX, e.clientY) })}
                     onMouseLeave={() => setHover((h) => (h && h.id === n.id ? null : h))}
@@ -188,10 +188,14 @@ export default function InteractiveScene({ graph }: { graph: GraphData }) {
 
           {(hover || tapId) && (
             <div
-              className="pointer-events-none absolute rounded bg-black/70 px-2 py-1 text-[11px] ring-1 ring-white/10"
+              className="pointer-events-none absolute rounded px-2 py-1 text-[11px] ring-1"
               style={{
                 left: (hover?.x ?? 12) + 8,
                 top: (hover?.y ?? 12) + 8,
+                zIndex: 60,
+                backgroundColor: 'var(--surface)',
+                color: 'var(--color-foreground)',
+                borderColor: 'var(--border)',
               }}
             >
               {hover?.label || graph.nodes.find((n) => n.id === tapId)?.label}
@@ -199,7 +203,7 @@ export default function InteractiveScene({ graph }: { graph: GraphData }) {
           )}
         </>
       ) : (
-        <div className="absolute inset-0 grid place-items-center text-sm text-[color:var(--muted)]">Loading…</div>
+        <div className="absolute inset-0 grid place-items-center text-sm text-[var(--muted)]">Loading…</div>
       )}
     </div>
   );

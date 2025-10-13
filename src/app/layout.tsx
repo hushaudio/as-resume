@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
+import ThemeToggle from "@/components/ThemeToggle";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -43,19 +44,32 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Theme color */}
         <meta name="theme-color" content="#0A0A0A" media="(prefers-color-scheme: dark)" />
         <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)" />
+        {/* Apply saved theme ASAP to prevent FOUC */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(() => { try { var d = document.documentElement; var s = localStorage.getItem('theme'); if (s === 'dark' || s === 'light') { d.classList.add(s); } } catch(e) {} })();`,
+          }}
+        />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {/* Transparent floating nav */}
         <div className="fixed top-4 left-0 right-0 z-50 pointer-events-none">
           <nav className="mx-auto max-w-4xl px-4">
-                <div className="flex items-center justify-between rounded-full bg-black/20 backdrop-blur-md px-4 py-2 ring-1 ring-white/10 pointer-events-auto select-none">
-              <Link href="/resume" className="text-sm text-white/80 hover:text-white transition-colors">Classic Resume</Link>
-              <Link href="/graph" className="text-sm text-white/80 hover:text-white transition-colors">Experience Graph</Link>
+            <div className="grid grid-cols-3 items-center rounded-full bg-[var(--surface)] backdrop-blur-md px-4 py-2 ring-1 border-theme pointer-events-auto select-none" style={{ ['--tw-ring-color' as any]: 'var(--border)' }}>
+              <div className="justify-self-start">
+                <Link href="/resume" className="text-sm text-[var(--color-foreground)]/90 hover:opacity-100 transition-opacity">Classic Resume</Link>
+              </div>
+              <div className="justify-self-center">
+                <ThemeToggle />
+              </div>
+              <div className="justify-self-end">
+                <Link href="/graph" className="text-sm text-[var(--color-foreground)]/90 hover:opacity-100 transition-opacity">Experience Graph</Link>
+              </div>
             </div>
           </nav>
         </div>
 
-        <div className="min-h-screen bg-[color:var(--color-background)] text-[color:var(--color-foreground)]">
+        <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-foreground)]">
           {children}
         </div>
       </body>

@@ -1,14 +1,63 @@
 @import "tailwindcss";
 
+/* Theme variables
+   - Defaults target light mode
+   - prefers-color-scheme: dark overrides for dark mode
+   - .light / .dark classes permit manual override
+*/
+
 :root {
-  /* Theme: green, brown, blue, purple */
-  --color-background: #0b0f0c; /* deep near-black with green tint */
-  --color-foreground: #e8f1ea; /* subtle greenish white */
-  --muted: #9aa79c; /* green-gray */
-  --accent: #60a5fa; /* blue */
-  --accent-green: #86efac; /* green */
-  --accent-brown: #d78736; /* brown (earthy) */
-  --accent-purple: #c084fc; /* purple */
+  /* Light theme */
+  --color-background: #ffffff;
+  --color-foreground: #0b0f0c;
+  --muted: #6b7280;
+  --accent: #2563eb;
+  --accent-green: #059669;
+  --accent-brown: #92400e;
+  --accent-bright: #55a1ff;
+  --accent-purple: #7c3aed;
+  --surface: #f8fafc;
+  --muted-bg: #f1f5f9;
+  --border: rgba(15,23,42,0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: #0b0f0c;
+    --color-foreground: #e8f1ea;
+    --muted: #9aa79c;
+    --accent: #60a5fa;
+    --accent-green: #86efac;
+    --accent-brown: #d78736;
+    --accent-bright: #55a1ff;
+    --accent-purple: #c084fc;
+    --surface: rgba(255,255,255,0.02);
+    --muted-bg: rgba(255,255,255,0.02);
+    --border: rgba(255,255,255,0.06);
+  }
+}
+
+/* Manual override classes */
+.light {
+  --color-background: #ffffff;
+  --color-foreground: #0b0f0c;
+  --muted: #6b7280;
+  --accent: #2563eb;
+  --accent-green: #059669;
+  --surface: #f8fafc;
+  --muted-bg: #f1f5f9;
+  --border: rgba(15,23,42,0.06);
+}
+
+.dark {
+  --color-background: #0b0f0c;
+  --color-foreground: #e8f1ea;
+  --muted: #9aa79c;
+  --accent: #60a5fa;
+  --accent-green: #86efac;
+  --surface: rgba(255,255,255,0.02);
+  --muted-bg: rgba(255,255,255,0.02);
+  --border: rgba(255,255,255,0.06);
 }
 
 @layer utilities {
@@ -17,8 +66,11 @@
   .text-accent-green { color: var(--accent-green) }
   .text-accent-brown { color: var(--accent-brown) }
   .text-accent-purple { color: var(--accent-purple) }
+  .bg-surface { background: var(--surface) }
+  .muted-bg { background: var(--muted-bg) }
+  .border-theme { border-color: var(--border) }
 }
 
 html,body { height:100% }
-body { background:var(--color-background); color:var(--color-foreground); }
+body { background:var(--color-background); color:var(--color-foreground); transition: background-color 160ms linear, color 160ms linear }
 

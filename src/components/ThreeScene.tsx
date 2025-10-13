@@ -347,6 +347,13 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
         return c.getHex();
       };
 
+      const isDarkMode = () => {
+        const root = document.documentElement;
+        if (root.classList.contains('dark')) return true;
+        if (root.classList.contains('light')) return false;
+        return window.matchMedia('(prefers-color-scheme: dark)').matches;
+      };
+
       // Edge objects for dynamic highlighting
       let highlightedLines: any;
       let regularLines: any;
@@ -368,13 +375,17 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
         // Create new edge geometries
         const { highlightedPositions, regularPositions } = createEdgeGeometry(activeNodeId);
 
-        // Highlighted edges (white, higher opacity)
+        // Highlighted edges (theme foreground, higher opacity)
         const highlightedLineGeo = new THREE.BufferGeometry();
         if (highlightedPositions.length > 0) {
           highlightedLineGeo.setAttribute("position", new THREE.Float32BufferAttribute(highlightedPositions, 3));
         }
+        const lightFallback = getCSSColor("--color-foreground", 0x0b0f0c);
+        const highlightHex = isDarkMode()
+          ? getCSSColor("--color-foreground", 0xffffff)
+          : getCSSColor("--accent-bright", lightFallback);
         const highlightedLineMat = new THREE.LineBasicMaterial({
-          color: 0xffffff,
+          color: highlightHex,
           transparent: true,
           opacity: 0.6
         });
@@ -396,6 +407,13 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
 
       // Initialize with no highlighting
       updateEdgeHighlighting(null);
+
+      // Update highlighting colors on theme changes (class or system)
+      const mql = window.matchMedia('(prefers-color-scheme: dark)');
+      const onSchemeChange = () => updateEdgeHighlighting(activeNodeIdRef.current);
+      mql.addEventListener('change', onSchemeChange);
+      const classObserver = new MutationObserver(() => updateEdgeHighlighting(activeNodeIdRef.current));
+      classObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 
       // Hover/tap picking
       const raycaster = new THREE.Raycaster();
@@ -692,6 +710,8 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
       cleanup = () => {
         cancelAnimationFrame(raf);
         window.removeEventListener("resize", resize);
+        mql.removeEventListener('change', onSchemeChange);
+        classObserver.disconnect();
         renderer.domElement.removeEventListener("pointermove", onPointerMove);
         renderer.domElement.removeEventListener("pointerleave", onPointerLeave);
         renderer.domElement.removeEventListener("pointerenter", onPointerEnter);
@@ -789,57 +809,58 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
       {ready && !isTouchDevice && (
         <div className="absolute top-4 left-4 z-20">
           <div 
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/60 backdrop-blur-sm ring-1 ring-white/20 cursor-help transition-all hover:bg-black/80 hover:ring-white/40"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[var(--surface)] backdrop-blur-sm ring-1 cursor-help transition-all"
+            style={{ ['--tw-ring-color' as any]: 'var(--border)' }}
             onMouseEnter={() => setShowControlsTooltip(true)}
             onMouseLeave={() => setShowControlsTooltip(false)}
           >
             {/* Camera icon */}
-            <svg className="w-4 h-4 text-white/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-4 h-4 text-[var(--color-foreground)] opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
-            <span className="text-xs text-white/70 font-medium">?</span>
+            <span className="text-xs text-[var(--color-foreground)] opacity-70 font-medium">?</span>
           </div>
           
           {/* Controls tooltip */}
           {showControlsTooltip && (
-            <div className="absolute top-full left-0 mt-2 w-64 px-3 py-2.5 rounded-lg bg-black/90 backdrop-blur-sm ring-1 ring-white/20 text-xs text-white/80 space-y-3">
-              <div className="font-semibold text-white text-sm">Camera Controls</div>
+            <div className="absolute top-full left-0 mt-2 w-64 px-3 py-2.5 rounded-lg bg-[var(--surface)] backdrop-blur-sm ring-1 text-xs text-[var(--color-foreground)] space-y-3" style={{ ['--tw-ring-color' as any]: 'var(--border)' }}>
+              <div className="font-semibold text-[var(--color-foreground)] text-sm">Camera Controls</div>
               <div className="space-y-1.5">
                 <div className="flex items-start gap-2">
-                  <span className="text-[color:var(--accent)] font-medium min-w-[60px]">Rotate:</span>
+                  <span className="text-[var(--accent)] font-medium min-w-[60px]">Rotate:</span>
                   <span>Click and drag</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-[color:var(--accent)] font-medium min-w-[60px]">Pan:</span>
+                  <span className="text-[var(--accent)] font-medium min-w-[60px]">Pan:</span>
                   <span>Right-click drag or Shift + drag</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-[color:var(--accent)] font-medium min-w-[60px]">Zoom:</span>
+                  <span className="text-[var(--accent)] font-medium min-w-[60px]">Zoom:</span>
                   <span>Mouse wheel</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-[color:var(--accent-green)] font-medium min-w-[60px]">Select:</span>
+                  <span className="text-[var(--accent-green)] font-medium min-w-[60px]">Select:</span>
                   <span>Click node or label</span>
                 </div>
               </div>
               
-              <div className="pt-2 border-t border-white/10">
-                <div className="font-semibold text-white text-sm mb-1.5">Color Guide</div>
+              <div className="pt-2 border-t border-theme">
+                <div className="font-semibold text-[var(--color-foreground)] text-sm mb-1.5">Color Guide</div>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-[color:var(--accent-brown)]" />
+                    <div className="w-2 h-2 rounded-full bg-[var(--accent-brown)]" />
                     <span className="text-[10px]">Projects & Companies</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-[color:var(--accent-purple)]" />
+                    <div className="w-2 h-2 rounded-full bg-[var(--accent-purple)]" />
                     <span className="text-[10px]">Music & Creative</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-[color:var(--accent-green)]" />
+                    <div className="w-2 h-2 rounded-full bg-[var(--accent-green)]" />
                     <span className="text-[10px]">Skills & Tech</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-[color:var(--accent)]" />
+                    <div className="w-2 h-2 rounded-full bg-[var(--accent)]" />
                     <span className="text-[10px]">Experience & Roles</span>
                   </div>
                 </div>
@@ -853,14 +874,15 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
       {ready && isTouchDevice && !mobileOpen && (
         <div className="absolute top-16 right-4 z-20">
           <button
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/60 backdrop-blur-sm ring-1 ring-white/20 transition-all active:bg-black/80 active:ring-white/40"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[var(--surface)] backdrop-blur-sm ring-1 transition-all active:opacity-90"
+            style={{ ['--tw-ring-color' as any]: 'var(--border)' }}
             onClick={() => setShowControlsTooltip(!showControlsTooltip)}
           >
             {/* Touch icon */}
-            <svg className="w-4 h-4 text-white/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-4 h-4 text-[var(--color-foreground)] opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
             </svg>
-            <span className="text-xs text-white/70 font-medium">?</span>
+            <span className="text-xs text-[var(--color-foreground)] opacity-70 font-medium">?</span>
           </button>
 
           {/* Controls tooltip */}
@@ -871,31 +893,31 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
                 className="fixed inset-0 bg-black/20 backdrop-blur-sm z-10"
                 onClick={() => setShowControlsTooltip(false)}
               />
-              <div className={`w-72 px-3 py-2.5 rounded-lg bg-black/90 backdrop-blur-sm ring-1 ring-white/20 text-xs text-white/80 space-y-3 z-20 ${
+              <div className={`w-72 px-3 py-2.5 rounded-lg bg-[var(--surface)] backdrop-blur-sm ring-1 text-xs text-[var(--color-foreground)] space-y-3 z-20 ${
                 isTouchDevice
                   ? 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 max-w-[90vw]'
                   : 'absolute bottom-full right-0 mb-2'
-              }`}>
-                <div className="font-semibold text-white text-sm">Three.js Camera Controls</div>
+              }`} style={{ ['--tw-ring-color' as any]: 'var(--border)' }}>
+                <div className="font-semibold text-[var(--color-foreground)] text-sm">Three.js Camera Controls</div>
                 <div className="space-y-2">
                   <div className="flex items-start gap-2">
-                    <span className="text-[color:var(--accent)] font-medium min-w-[80px]">Orbit:</span>
+                    <span className="text-[var(--accent)] font-medium min-w-[80px]">Orbit:</span>
                     <span>One finger drag to rotate camera around center</span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <span className="text-[color:var(--accent)] font-medium min-w-[80px]">Pan:</span>
+                    <span className="text-[var(--accent)] font-medium min-w-[80px]">Pan:</span>
                     <span>Two finger drag to move camera position</span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <span className="text-[color:var(--accent)] font-medium min-w-[80px]">Zoom:</span>
+                    <span className="text-[var(--accent)] font-medium min-w-[80px]">Zoom:</span>
                     <span>Pinch with two fingers to zoom in/out</span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <span className="text-[color:var(--accent)] font-medium min-w-[80px]">Dolly:</span>
+                    <span className="text-[var(--accent)] font-medium min-w-[80px]">Dolly:</span>
                     <span>Two finger vertical swipe to move closer/farther</span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <span className="text-[color:var(--accent-green)] font-medium min-w-[80px]">Select:</span>
+                    <span className="text-[var(--accent-green)] font-medium min-w-[80px]">Select:</span>
                     <span>Tap node or label to open details</span>
                   </div>
                   <div className="flex items-start gap-2">
@@ -904,23 +926,23 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-white/10">
-                  <div className="font-semibold text-white text-sm mb-1.5">Node Colors</div>
+                <div className="pt-2 border-t border-theme">
+                  <div className="font-semibold text-[var(--color-foreground)] text-sm mb-1.5">Node Colors</div>
                   <div className="grid grid-cols-2 gap-1">
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-[color:var(--accent-brown)]" />
+                      <div className="w-2 h-2 rounded-full bg-[var(--accent-brown)]" />
                       <span className="text-[10px]">Projects & Companies</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-[color:var(--accent-purple)]" />
+                      <div className="w-2 h-2 rounded-full bg-[var(--accent-purple)]" />
                       <span className="text-[10px]">Music & Creative</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-[color:var(--accent-green)]" />
+                      <div className="w-2 h-2 rounded-full bg-[var(--accent-green)]" />
                       <span className="text-[10px]">Skills & Tech</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-[color:var(--accent)]" />
+                      <div className="w-2 h-2 rounded-full bg-[var(--accent)]" />
                       <span className="text-[10px]">Experience & Roles</span>
                     </div>
                     <div className="col-span-2 flex items-center gap-2">
@@ -938,12 +960,12 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
       {/* Tooltip container to keep within viewport */}
       <TooltipStyles />
       {!ready && (
-        <div className="absolute inset-0 grid place-items-center text-sm text-[color:var(--muted)]">Preparing 3D…</div>
+        <div className="absolute inset-0 grid place-items-center text-sm text-[var(--muted)]">Preparing 3D…</div>
       )}
       {ready && labels.filter((l) => l.visible).map((l) => (
         <div
           key={l.id}
-          className="absolute text-[10px] text-white/70 whitespace-nowrap cursor-pointer hover:text-white transition-colors select-none"
+          className="absolute text-[10px] text-[var(--color-foreground)] opacity-70 whitespace-nowrap cursor-pointer hover:opacity-100 transition-colors select-none"
           style={{ left: l.x, top: l.y, transform: "translate(-50%, -120%)", pointerEvents: 'auto' }}
           onMouseEnter={() => {
             // Ignore hover entirely while a tooltip is locked
@@ -1003,17 +1025,17 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
       {(!isTouchDevice && activeId && activePos && currentNode) && (
         <TooltipBox x={activePos.x} y={activePos.y} interactive={!!locked} innerRef={tooltipRef}>
           <div className="font-semibold text-sm" style={{ color: getNodeTypeColor(currentNode.type) }}>{currentNode.label}</div>
-          <div className="text-[10px] text-[color:var(--muted)] mt-0.5 capitalize">{currentNode.type}</div>
+          <div className="text-[10px] text-[var(--muted)] mt-0.5 capitalize">{currentNode.type}</div>
           {currentNode.meta && (
             <div className="mt-3 space-y-2">
               {(currentNode.meta as any).description && (
-                <div className="text-[11px] leading-relaxed text-white/80">{(currentNode.meta as any).description}</div>
+                <div className="text-[11px] leading-relaxed text-[var(--color-foreground)] opacity-80">{(currentNode.meta as any).description}</div>
               )}
               {(currentNode.meta as any).video && (
                 <div className="mt-2">
                   <button
                     type="button"
-                    className="text-[10px] text-[color:var(--accent)] hover:text-[color:var(--accent)]/80 underline cursor-pointer transition-colors"
+                    className="text-[10px] text-[var(--accent)] hover:text-[var(--accent)]/80 underline cursor-pointer transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
                       setVideoPopup({
@@ -1030,43 +1052,43 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
               )}
               {((currentNode.meta as any).stack || (currentNode.meta as any).technologies) && (
                 <div className="mt-2">
-                  <div className="text-[10px] text-[color:var(--accent-green)] font-medium mb-1">{(currentNode.meta as any).stack ? "Stack" : "Technologies"}</div>
+                  <div className="text-[10px] text-[var(--accent-green)] font-medium mb-1">{(currentNode.meta as any).stack ? "Stack" : "Technologies"}</div>
                   <div className="flex flex-wrap gap-1">
                     {((currentNode.meta as any).stack || (currentNode.meta as any).technologies || []).map((tech: string, i: number) => (
-                      <span key={i} className="inline-block rounded bg-[color:var(--accent-green)]/20 px-1.5 py-0.5 text-[10px] text-[color:var(--accent-green)]">{tech}</span>
+                      <span key={i} className="inline-block rounded bg-[var(--accent-green)]/20 px-1.5 py-0.5 text-[10px] text-[var(--accent-green)]">{tech}</span>
                     ))}
                   </div>
                 </div>
               )}
               {(currentNode.meta as any).timeline && (
-                <div className="text-[10px] text-[color:var(--muted)]"><span className="font-medium">Timeline:</span> {(currentNode.meta as any).timeline}</div>
+                <div className="text-[10px] text-[var(--muted)]"><span className="font-medium">Timeline:</span> {(currentNode.meta as any).timeline}</div>
               )}
               {(currentNode.meta as any).impact && (
-                <div className="text-[10px] text-[color:var(--accent-brown)]"><span className="font-medium">Impact:</span> {(currentNode.meta as any).impact}</div>
+                <div className="text-[10px] text-[var(--accent-brown)]"><span className="font-medium">Impact:</span> {(currentNode.meta as any).impact}</div>
               )}
               {(currentNode.meta as any).keyChallenges && (
                 <div className="mt-2">
-                  <div className="text-[10px] text-[color:var(--accent-purple)] font-medium mb-1">Key Challenges</div>
+                  <div className="text-[10px] text-[var(--accent-purple)] font-medium mb-1">Key Challenges</div>
                   <div className="space-y-1">
                     {(currentNode.meta as any).keyChallenges.map((challenge: string, i: number) => (
-                      <div key={i} className="text-[10px] text-white/70 leading-relaxed">• {challenge}</div>
+                      <div key={i} className="text-[10px] text-[var(--color-foreground)] opacity-70 leading-relaxed">• {challenge}</div>
                     ))}
                   </div>
                 </div>
               )}
               {(currentNode.meta as any).proficiency && (
-                <div className="text-[10px]"><span className="font-medium text-[color:var(--muted)]">Proficiency:</span> <span className="text-[color:var(--accent)]">{(currentNode.meta as any).proficiency}</span></div>
+                <div className="text-[10px]"><span className="font-medium text-[var(--muted)]">Proficiency:</span> <span className="text-[var(--accent)]">{(currentNode.meta as any).proficiency}</span></div>
               )}
               {(currentNode.meta as any).projects && Array.isArray((currentNode.meta as any).projects) && (
                 <div className="mt-2">
-                  <div className="text-[10px] text-[color:var(--muted)] font-medium mb-1">Used in</div>
-                  <div className="text-[10px] text-white/70">{(currentNode.meta as any).projects.join(", ")}</div>
+                  <div className="text-[10px] text-[var(--muted)] font-medium mb-1">Used in</div>
+                  <div className="text-[10px] text-[var(--color-foreground)] opacity-70">{(currentNode.meta as any).projects.join(", ")}</div>
                 </div>
               )}
               {(currentNode.meta as any).keyAchievements && (
                 <div className="mt-2">
-                  <div className="text-[10px] text-[color:var(--accent-brown)] font-medium mb-1">Key Achievements</div>
-                  <ul className="list-disc list-inside text-[10px] text-white/80 space-y-0.5">
+                  <div className="text-[10px] text-[var(--accent-brown)] font-medium mb-1">Key Achievements</div>
+                  <ul className="list-disc list-inside text-[10px] text-[var(--color-foreground)] opacity-80 space-y-0.5">
                     {((currentNode.meta as any).keyAchievements || []).map((achievement: string, i: number) => (
                       <li key={i}>{achievement}</li>
                     ))}
@@ -1074,25 +1096,25 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
                 </div>
               )}
               {(currentNode.meta as any).year && (
-                <div className="text-[10px] text-[color:var(--muted)] mt-2"><span className="font-medium">Year:</span> {(currentNode.meta as any).year}</div>
+                <div className="text-[10px] text-[var(--muted)] mt-2"><span className="font-medium">Year:</span> {(currentNode.meta as any).year}</div>
               )}
               {(currentNode.meta as any).role && (
-                <div className="text-[10px] text-[color:var(--accent-purple)] mt-1"><span className="font-medium">Role:</span> {(currentNode.meta as any).role}</div>
+                <div className="text-[10px] text-[var(--accent-purple)] mt-1"><span className="font-medium">Role:</span> {(currentNode.meta as any).role}</div>
               )}
               {(currentNode.meta as any).genre && (
-                <div className="text-[10px] text-[color:var(--muted)] mt-1"><span className="font-medium">Genre:</span> {(currentNode.meta as any).genre}</div>
+                <div className="text-[10px] text-[var(--muted)] mt-1"><span className="font-medium">Genre:</span> {(currentNode.meta as any).genre}</div>
               )}
             </div>
           )}
           {relatedNodes.length > 0 && (
-            <div className="mt-3 pt-3 border-t border-white/10">
-              <div className="text-[10px] text-[color:var(--muted)] mb-1.5 font-medium">Related Connections</div>
+            <div className="mt-3 pt-3 border-t border-theme">
+              <div className="text-[10px] text-[var(--muted)] mb-1.5 font-medium">Related Connections</div>
               <div className="flex flex-wrap gap-1">
                 {relatedNodes.slice(0, 12).map((n) => (
                   <button
                     key={n.id}
                     type="button"
-                    className="inline-block rounded bg-white/10 px-1.5 py-0.5 text-[10px] hover:bg-white/20 transition-colors cursor-pointer"
+                    className="inline-block rounded bg-[var(--muted-bg)] px-1.5 py-0.5 text-[10px] hover:opacity-90 transition-colors cursor-pointer"
                     onClick={(e) => {
                       e.stopPropagation();
                       // Find current screen position for this node from labels (even if not visible)
@@ -1110,7 +1132,7 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
                   </button>
                 ))}
                 {relatedNodes.length > 12 && (
-                  <span className="text-[10px] text-[color:var(--muted)]">+{relatedNodes.length - 12} more</span>
+                  <span className="text-[10px] text-[var(--muted)]">+{relatedNodes.length - 12} more</span>
                 )}
               </div>
             </div>
@@ -1125,17 +1147,17 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
           onClose={() => { setMobileOpen(false); setMobileAnchor(null); setMobileSelectedId(null); setHover(null); }}
         >
           <div className="font-semibold text-sm" style={{ color: getNodeTypeColor(mobileCurrentNode.type) }}>{mobileCurrentNode.label}</div>
-          <div className="text-[10px] text-[color:var(--muted)] mt-0.5 capitalize">{mobileCurrentNode.type}</div>
+          <div className="text-[10px] text-[var(--muted)] mt-0.5 capitalize">{mobileCurrentNode.type}</div>
           {mobileCurrentNode.meta && (
             <div className="mt-3 space-y-2">
               {(mobileCurrentNode.meta as any).description && (
-                <div className="text-[11px] leading-relaxed text-white/80">{(mobileCurrentNode.meta as any).description}</div>
+                <div className="text-[11px] leading-relaxed text-[var(--color-foreground)] opacity-80">{(mobileCurrentNode.meta as any).description}</div>
               )}
               {(mobileCurrentNode.meta as any).video && (
                 <div className="mt-2">
                   <button
                     type="button"
-                    className="text-[10px] text-[color:var(--accent)] hover:text-[color:var(--accent)]/80 underline cursor-pointer transition-colors"
+                    className="text-[10px] text-[var(--accent)] hover:text-[var(--accent)]/80 underline cursor-pointer transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
                       setVideoPopup({
@@ -1152,73 +1174,73 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
               )}
               {((mobileCurrentNode.meta as any).stack || (mobileCurrentNode.meta as any).technologies) && (
                 <div className="mt-2">
-                  <div className="text-[10px] text-[color:var(--accent-green)] font-medium mb-1">{(mobileCurrentNode.meta as any).stack ? "Stack" : "Technologies"}</div>
+                  <div className="text-[10px] text-[var(--accent-green)] font-medium mb-1">{(mobileCurrentNode.meta as any).stack ? "Stack" : "Technologies"}</div>
                   <div className="flex flex-wrap gap-1">
                     {((mobileCurrentNode.meta as any).stack || (mobileCurrentNode.meta as any).technologies || []).map((tech: string, i: number) => (
-                      <span key={i} className="inline-block rounded bg-[color:var(--accent-green)]/20 px-1.5 py-0.5 text-[10px] text-[color:var(--accent-green)]">{tech}</span>
+                      <span key={i} className="inline-block rounded bg-[var(--accent-green)]/20 px-1.5 py-0.5 text-[10px] text-[var(--accent-green)]">{tech}</span>
                     ))}
                   </div>
                 </div>
               )}
               {(mobileCurrentNode.meta as any).timeline && (
-                <div className="text-[10px] text-[color:var(--muted)]"><span className="font-medium">Timeline:</span> {(mobileCurrentNode.meta as any).timeline}</div>
+                <div className="text-[10px] text-[var(--muted)]"><span className="font-medium">Timeline:</span> {(mobileCurrentNode.meta as any).timeline}</div>
               )}
               {(mobileCurrentNode.meta as any).impact && (
-                <div className="text-[10px] text-[color:var(--accent-brown)]"><span className="font-medium">Impact:</span> {(mobileCurrentNode.meta as any).impact}</div>
+                <div className="text-[10px] text-[var(--accent-brown)]"><span className="font-medium">Impact:</span> {(mobileCurrentNode.meta as any).impact}</div>
               )}
               {(mobileCurrentNode.meta as any).keyChallenges && (
                 <div className="mt-2">
-                  <div className="text-[10px] text-[color:var(--accent-purple)] font-medium mb-1">Key Challenges</div>
+                  <div className="text-[10px] text-[var(--accent-purple)] font-medium mb-1">Key Challenges</div>
                   <div className="space-y-1">
                     {(mobileCurrentNode.meta as any).keyChallenges.map((challenge: string, i: number) => (
-                      <div key={i} className="text-[10px] text-white/70 leading-relaxed">• {challenge}</div>
+                      <div key={i} className="text-[10px] text-[var(--color-foreground)] opacity-70 leading-relaxed">• {challenge}</div>
                     ))}
                   </div>
                 </div>
               )}
               {(mobileCurrentNode.meta as any).proficiency && (
-                <div className="text-[10px]"><span className="font-medium text-[color:var(--muted)]">Proficiency:</span> <span className="text-[color:var(--accent)]">{(mobileCurrentNode.meta as any).proficiency}</span></div>
+                <div className="text-[10px]"><span className="font-medium text-[var(--muted)]">Proficiency:</span> <span className="text-[var(--accent)]">{(mobileCurrentNode.meta as any).proficiency}</span></div>
               )}
               {(mobileCurrentNode.meta as any).projects && Array.isArray((mobileCurrentNode.meta as any).projects) && (
                 <div className="mt-2">
-                  <div className="text-[10px] text-[color:var(--muted)] font-medium mb-1">Used in</div>
+                  <div className="text-[10px] text-[var(--muted)] font-medium mb-1">Used in</div>
                   <div className="flex flex-wrap gap-1">
                     {(mobileCurrentNode.meta as any).projects.map((proj: string, i: number) => (
-                      <span key={i} className="inline-block rounded bg-white/10 px-1.5 py-0.5 text-[10px]">{proj}</span>
+                      <span key={i} className="inline-block rounded bg-[var(--muted-bg)] px-1.5 py-0.5 text-[10px]">{proj}</span>
                     ))}
                   </div>
                 </div>
               )}
               {(mobileCurrentNode.meta as any).keyAchievements && (
                 <div className="mt-2">
-                  <div className="text-[10px] text-[color:var(--accent)] font-medium mb-1">Key Achievements</div>
+                  <div className="text-[10px] text-[var(--accent)] font-medium mb-1">Key Achievements</div>
                   <div className="space-y-1">
                     {(mobileCurrentNode.meta as any).keyAchievements.map((achievement: string, i: number) => (
-                      <div key={i} className="text-[10px] text-white/70 leading-relaxed">• {achievement}</div>
+                      <div key={i} className="text-[10px] text-[var(--color-foreground)] opacity-70 leading-relaxed">• {achievement}</div>
                     ))}
                   </div>
                 </div>
               )}
               {(mobileCurrentNode.meta as any).year && (
-                <div className="text-[10px] text-[color:var(--muted)] mt-2"><span className="font-medium">Year:</span> {(mobileCurrentNode.meta as any).year}</div>
+                <div className="text-[10px] text-[var(--muted)] mt-2"><span className="font-medium">Year:</span> {(mobileCurrentNode.meta as any).year}</div>
               )}
               {(mobileCurrentNode.meta as any).role && (
-                <div className="text-[10px] text-[color:var(--accent-purple)] mt-1"><span className="font-medium">Role:</span> {(mobileCurrentNode.meta as any).role}</div>
+                <div className="text-[10px] text-[var(--accent-purple)] mt-1"><span className="font-medium">Role:</span> {(mobileCurrentNode.meta as any).role}</div>
               )}
               {(mobileCurrentNode.meta as any).genre && (
-                <div className="text-[10px] text-[color:var(--muted)] mt-1"><span className="font-medium">Genre:</span> {(mobileCurrentNode.meta as any).genre}</div>
+                <div className="text-[10px] text-[var(--muted)] mt-1"><span className="font-medium">Genre:</span> {(mobileCurrentNode.meta as any).genre}</div>
               )}
             </div>
           )}
           {mobileRelatedNodes.length > 0 && (
-            <div className="mt-3 pt-3 border-t border-white/10">
-              <div className="text-[10px] text-[color:var(--muted)] mb-1.5 font-medium">Related Connections</div>
+            <div className="mt-3 pt-3 border-t border-theme">
+              <div className="text-[10px] text-[var(--muted)] mb-1.5 font-medium">Related Connections</div>
               <div className="flex flex-wrap gap-1">
                 {mobileRelatedNodes.slice(0,6).map((n) => (
                   <button
                     key={n.id}
                     type="button"
-                    className="inline-block rounded bg-white/10 px-2 py-1 text-[10px] hover:bg-white/20 transition-colors"
+                    className="inline-block rounded bg-[var(--muted-bg)] px-2 py-1 text-[10px] hover:opacity-90 transition-colors"
                     onClick={() => {
                       setMobileSelectedId(n.id);
                     }}
@@ -1227,7 +1249,7 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
                   </button>
                 ))}
                 {mobileRelatedNodes.length > 6 && (
-                  <span className="text-[10px] text-[color:var(--muted)]">+{mobileRelatedNodes.length - 6} more</span>
+                  <span className="text-[10px] text-[var(--muted)]">+{mobileRelatedNodes.length - 6} more</span>
                 )}
               </div>
             </div>
@@ -1242,16 +1264,17 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
           onClick={() => setVideoPopup(null)}
         >
           <div 
-            className="relative w-[min(95vw,400px)] aspect-[9/19.5] bg-black rounded-lg p-4 overflow-hidden"
+            className="relative w-[min(95vw,400px)] aspect-[9/19.5] bg-[var(--surface)] rounded-lg p-4 overflow-hidden ring-1"
+            style={{ ['--tw-ring-color' as any]: 'var(--border)' }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-2">
               {videoPopup.description && (
-                <p className="text-xs text-white/70">{videoPopup.description}</p>
+                <p className="text-xs text-[var(--color-foreground)] opacity-70">{videoPopup.description}</p>
               )}
               <button
                 type="button"
-                className="ml-auto px-2 py-1 text-sm text-white/70 hover:text-white transition-colors"
+                className="ml-auto px-2 py-1 text-sm text-[var(--color-foreground)] opacity-70 hover:opacity-100 transition-colors"
                 onClick={() => setVideoPopup(null)}
               >
                 Close ✕
@@ -1327,8 +1350,8 @@ function TooltipBox({ x, y, children, interactive = false, innerRef }: { x: numb
   return (
     <div
       ref={innerRef as any}
-      className={`${interactive ? 'pointer-events-auto' : 'pointer-events-none'} absolute rounded-lg bg-black/90 px-4 py-3 text-xs ring-1 ring-white/20 z-10 max-w-md backdrop-blur-sm`}
-      style={{ left, top, transform, maxHeight: MAX_H, overflowY: 'auto' as const, minWidth: MIN_W, maxWidth: 'min(480px, calc(100vw - 24px))' }}
+      className={`${interactive ? 'pointer-events-auto' : 'pointer-events-none'} absolute rounded-lg bg-[var(--surface)] px-4 py-3 text-xs ring-1 z-10 max-w-md backdrop-blur-sm`}
+      style={{ left, top, transform, maxHeight: MAX_H, overflowY: 'auto' as const, minWidth: MIN_W, maxWidth: 'min(480px, calc(100vw - 24px))', ['--tw-ring-color' as any]: 'var(--border)' }}
       onPointerDown={interactive ? (e) => { e.stopPropagation(); } : undefined}
     >
       {children}

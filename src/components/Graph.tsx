@@ -25,7 +25,7 @@ const data = {
   ],
   experience: [
     {
-      title: "UE5/Game Tech (Consult)",
+      title: "UE5/iOS Game Tech",
       company: "Oberha5li Studios",
       years: "2024–Present",
       bullets: ["Unblocked TestFlight deployment for Mowingtons."],
@@ -607,8 +607,7 @@ export default function Graph() {
       ],
       roles: [
         { key: "Founding Engineer", companies: ["Audialab"] },
-        { key: "Contract Engineer", companies: ["565 Media"] },
-        { key: "Full-Stack Engineer", companies: ["OneShotMove"] },
+        { key: "Contract Engineer", companies: ["565 Media", "OneShotMove"] },
         { key: "Consulting Engineer", companies: ["Ric Wake / RB-360"] },
         { key: "UE5/Game Tech (Consult)", companies: ["Oberha5li Studios"] },
         { key: "Founder", companies: ["Iowa COVID County Tracker"] },
@@ -634,7 +633,7 @@ export default function Graph() {
         { key: "Contract Engineer", skills: ["React", "Next.js", "Node.js", "Docker", "CI/CD"] },
         { key: "Full-Stack Engineer", skills: ["React", "Next.js", "Node.js", "TypeScript"] },
         { key: "Consulting Engineer", skills: ["Max for Live", "MIDI/MTC"] },
-        { key: "UE5/Game Tech (Consult)", skills: ["Unreal Engine 5"] },
+        { key: "UE5/iOS Game Tech", skills: ["Unreal Engine 5"] },
         { key: "Founder", skills: ["React", "Next.js", "TypeScript", "Node.js"] },
       ],
       // NEW: Music to Skill relationships
