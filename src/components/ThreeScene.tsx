@@ -40,7 +40,7 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
     try {
       const hasTouch = 'ontouchstart' in window || (navigator as any).maxTouchPoints > 0 || window.matchMedia('(hover: none)').matches;
       setIsTouchDevice(!!hasTouch);
-    } catch (e) { 
+    } catch {
       setIsTouchDevice(false); 
     }
   }, []);
@@ -231,7 +231,6 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
               
               // Project force onto tangent plane to keep on sphere
               const aNorm = a.clone().normalize();
-              const bNorm = b.clone().normalize();
               const dNorm = d.clone().normalize();
               
               const ta = dNorm.clone().sub(aNorm.clone().multiplyScalar(dNorm.dot(aNorm))).multiplyScalar(forceMag);
@@ -453,9 +452,6 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
         // When a tooltip is locked, hovering should do nothing
         if (locked) { renderer.domElement.style.cursor = "grab"; return; }
         if (isDragging) { setHover(null); isHoveringLabelRef.current = false; return; }
-        const rect = renderer.domElement.getBoundingClientRect();
-        const cx = ev.clientX - rect.left;
-        const cy = ev.clientY - rect.top;
         const hitId = selectNodeAt(ev.clientX, ev.clientY);
         if (hitId) { isHoveringLabelRef.current = true; renderer.domElement.style.cursor = "pointer"; return; }
         renderer.domElement.style.cursor = "grab";

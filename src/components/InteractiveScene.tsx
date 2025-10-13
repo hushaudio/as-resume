@@ -174,7 +174,7 @@ export default function InteractiveScene({ graph }: { graph: GraphData }) {
                     onMouseEnter={(e) => setHover({ id: n.id, label: n.label, ...toLocal(e, e.clientX, e.clientY) })}
                     onMouseMove={(e) => setHover({ id: n.id, label: n.label, ...toLocal(e, e.clientX, e.clientY) })}
                     onMouseLeave={() => setHover((h) => (h && h.id === n.id ? null : h))}
-                    onClick={(e) => setTapId((prev) => (prev === n.id ? null : n.id))}
+                    onClick={() => setTapId((prev) => (prev === n.id ? null : n.id))}
                     onTouchStart={(e) => {
                       const t = e.touches[0];
                       if (t) setHover({ id: n.id, label: n.label, ...toLocal(e, t.clientX, t.clientY) });
@@ -193,7 +193,7 @@ export default function InteractiveScene({ graph }: { graph: GraphData }) {
                 left: (hover?.x ?? 12) + 8,
                 top: (hover?.y ?? 12) + 8,
                 zIndex: 60,
-                ['--tw-ring-color' as any]: 'var(--border)'
+                ['--tw-ring-color' as string]: 'var(--border)'
               }}
             >
               {hover?.label || graph.nodes.find((n) => n.id === tapId)?.label}

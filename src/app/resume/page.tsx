@@ -96,7 +96,7 @@ const data = {
       title: "The Audioverse — decentralized streaming platform (2022)",
       bullets: [
         <><strong>What:</strong> Ownership-aware releases + real-time charts; mobile wallet flows.</>,
-        <><strong>How:</strong> NFT-inherited class; IPFS-chunked audio (public/private + encryption); "The Crossroads" oracle; React Native app (ENS, WatermelonDB, QR share).</>,
+        <><strong>How:</strong> NFT-inherited class; IPFS-chunked audio (public/private + encryption); &ldquo;The Crossroads&rdquo; oracle; React Native app (ENS, WatermelonDB, QR share).</>,
         (
           <span key="audioverse-video">
             <strong>Demo:</strong>{" "}

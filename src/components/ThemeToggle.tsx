@@ -6,7 +6,6 @@ export default function ThemeToggle() {
   const [isDark, setIsDark] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const root = document.documentElement;
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
 
     const getIsDark = () => {
@@ -14,11 +13,6 @@ export default function ThemeToggle() {
       if (saved === "dark") return true;
       if (saved === "light") return false;
       return mq.matches; // system
-    };
-
-    const apply = (mode: "light" | "dark" | null) => {
-      root.classList.remove("light", "dark");
-      if (mode) root.classList.add(mode);
     };
 
     setIsDark(getIsDark());
