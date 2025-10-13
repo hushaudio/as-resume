@@ -16,10 +16,10 @@ const data = {
     "Iron Man 3",
   ],
   about:
-    "I turn my own needs into dependable tools—rapid prototypes that harden into production. My lane: the overlap of web/app, audio DSP/JUCE, and local-AI. When others say 'not possible,' I map constraints, build the path, and make it stable enough for stage or scale.",
+    "I build the bridge from prototype to production across web/app (Next.js, React Native), audio DSP/JUCE (C++), and local-AI (Python/ONNX). I scope constraints fast, ship reliable systems, and harden them for live shows or large-scale traffic—often with analytics/CRO baked in.",
   whatIDo: [
     "Product engineering: building production applications and native tools across web, desktop, and mobile",
-    "AI/ML systems: end-to-end pipelines across audio, text, image, and video — C++/JUCE, ONNX, Transformers/Hugging Face, local and cloud inference, AI training for text (supervised), image and audio",
+    "AI/ML systems: end-to-end pipelines across audio, text, image, and video — C++/JUCE, ONNX, Transformers/Hugging Face, local and cloud inference. Trained 1000+ models spanning text, image, and audio generation",
     "Performance & analytics: instrumentation, SEO-aware frontend engineering, performance budgets and Core Web Vitals; practical experience running A/B tests when needed",
     "Live systems & shows: MIDI/MTC, Max devices, clocking networks, and hardened fail-safe stage rigs",
   ],

@@ -4,7 +4,6 @@
 
 import { useEffect, useRef, useState, useMemo } from "react";
 import MobileTooltip from "./MobileTooltip";
-import AudioverseVideoLink from "@/components/AudioverseVideoLink";
 import { getNodeTypeColor } from "@/lib/nodeColors";
 import type { GraphData } from "@/components/InteractiveScene";
 
@@ -27,6 +26,7 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
   const [locked, setLocked] = useState<{ id: string; x: number; y: number } | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
   const [showControlsTooltip, setShowControlsTooltip] = useState(false);
+  const [videoPopup, setVideoPopup] = useState<{ src: string; linkText: string; description?: string; linkColor?: string } | null>(null);
   // debugInfo removed
   
   useEffect(() => {
@@ -886,7 +886,21 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
               )}
               {(currentNode.meta as any).video && (
                 <div className="mt-2">
-                  <AudioverseVideoLink src={(currentNode.meta as any).video} desc={(currentNode.meta as any).videoDescription} />
+                  <button
+                    type="button"
+                    className="text-[10px] text-[color:var(--accent)] hover:text-[color:var(--accent)]/80 underline cursor-pointer transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setVideoPopup({
+                        src: (currentNode.meta as any).video,
+                        linkText: "click here for video example",
+                        description: (currentNode.meta as any).videoDescription,
+                        linkColor: "text-accent"
+                      });
+                    }}
+                  >
+                    click here for video example
+                  </button>
                 </div>
               )}
               {((currentNode.meta as any).stack || (currentNode.meta as any).technologies) && (
@@ -950,7 +964,25 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
               <div className="text-[10px] text-[color:var(--muted)] mb-1.5 font-medium">Related Connections</div>
               <div className="flex flex-wrap gap-1">
                 {relatedNodes.slice(0, 12).map((n) => (
-                  <span key={n.id} className="inline-block rounded bg-white/10 px-1.5 py-0.5 text-[10px] hover:bg-white/20 transition-colors">{n.label}</span>
+                  <button
+                    key={n.id}
+                    type="button"
+                    className="inline-block rounded bg-white/10 px-1.5 py-0.5 text-[10px] hover:bg-white/20 transition-colors cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Find current screen position for this node from labels (even if not visible)
+                      const L = labels.find((l) => l.id === n.id);
+                      if (L) {
+                        setLocked({ id: n.id, x: L.x, y: L.y });
+                        setHover({ id: n.id, label: n.label, type: n.type as string, x: L.x, y: L.y });
+                      } else {
+                        // Fallback: lock at current tooltip position
+                        if (activePos) setLocked({ id: n.id, x: activePos.x, y: activePos.y });
+                      }
+                    }}
+                  >
+                    {n.label}
+                  </button>
                 ))}
                 {relatedNodes.length > 12 && (
                   <span className="text-[10px] text-[color:var(--muted)]">+{relatedNodes.length - 12} more</span>
@@ -976,7 +1008,21 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
               )}
               {(mobileCurrentNode.meta as any).video && (
                 <div className="mt-2">
-                  <AudioverseVideoLink src={(mobileCurrentNode.meta as any).video} desc={(mobileCurrentNode.meta as any).videoDescription} />
+                  <button
+                    type="button"
+                    className="text-[10px] text-[color:var(--accent)] hover:text-[color:var(--accent)]/80 underline cursor-pointer transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setVideoPopup({
+                        src: (mobileCurrentNode.meta as any).video,
+                        linkText: "click here for video example",
+                        description: (mobileCurrentNode.meta as any).videoDescription,
+                        linkColor: "text-accent"
+                      });
+                    }}
+                  >
+                    click here for video example
+                  </button>
                 </div>
               )}
               {((mobileCurrentNode.meta as any).stack || (mobileCurrentNode.meta as any).technologies) && (
@@ -1044,7 +1090,16 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
               <div className="text-[10px] text-[color:var(--muted)] mb-1.5 font-medium">Related Connections</div>
               <div className="flex flex-wrap gap-1">
                 {mobileRelatedNodes.slice(0,6).map((n) => (
-                  <div key={n.id} className="inline-block rounded bg-white/10 px-2 py-1 text-[10px]">{n.label}</div>
+                  <button
+                    key={n.id}
+                    type="button"
+                    className="inline-block rounded bg-white/10 px-2 py-1 text-[10px] hover:bg-white/20 transition-colors"
+                    onClick={() => {
+                      setMobileSelectedId(n.id);
+                    }}
+                  >
+                    {n.label}
+                  </button>
                 ))}
                 {mobileRelatedNodes.length > 6 && (
                   <span className="text-[10px] text-[color:var(--muted)]">+{mobileRelatedNodes.length - 6} more</span>
@@ -1053,6 +1108,41 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
             </div>
           )}
         </MobileTooltip>
+      )}
+
+      {/* Video Popup Overlay */}
+      {videoPopup && (
+        <div 
+          className="fixed inset-0 z-50 grid place-items-center bg-black/80 backdrop-blur-sm"
+          onClick={() => setVideoPopup(null)}
+        >
+          <div 
+            className="relative w-[min(95vw,400px)] aspect-[9/19.5] bg-black rounded-lg p-4 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-2">
+              {videoPopup.description && (
+                <p className="text-xs text-white/70">{videoPopup.description}</p>
+              )}
+              <button
+                type="button"
+                className="ml-auto px-2 py-1 text-sm text-white/70 hover:text-white transition-colors"
+                onClick={() => setVideoPopup(null)}
+              >
+                Close ✕
+              </button>
+            </div>
+            <div className="w-full h-full grid place-items-center">
+              <video
+                src={videoPopup.src}
+                controls
+                autoPlay
+                className="w-full rounded bg-black"
+                style={{ maxHeight: 'calc(100vh - 220px)', objectFit: 'contain' }}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

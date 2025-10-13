@@ -1,4 +1,4 @@
-import AudioverseVideoLink from "@/components/AudioverseVideoLink";
+import VideoPopup from "@/components/VideoPopup";
 
 const data = {
   name: "Aaron Shier",
@@ -16,10 +16,10 @@ const data = {
     "Iron Man 3",
   ],
   about:
-    "I turn my own needs into dependable tools—rapid prototypes that harden into production. My lane: the overlap of web/app, audio DSP/JUCE, and local-AI. When others say 'not possible,' I map constraints, build the path, and make it stable enough for stage or scale.",
+    "I build the bridge from prototype to production across web/app (Next.js, React Native), audio DSP/JUCE (C++), and local-AI (Python/ONNX). I scope constraints fast, ship reliable systems, and harden them for live shows or large-scale traffic—often with analytics/CRO baked in.",
   whatIDo: [
     "Product engineering: building production applications and native tools across web, desktop, and mobile",
-    "AI/ML systems: end-to-end pipelines across audio, text, image, and video — C++/JUCE, ONNX, Transformers/Hugging Face, local and cloud inference, AI training for text (supervised), image and audio",
+    "AI/ML systems: end-to-end pipelines across audio, text, image, and video — C++/JUCE, ONNX, Transformers/Hugging Face, local and cloud inference. Trained 1000+ models spanning text, image, and audio generation",
     "Performance & analytics: instrumentation, SEO-aware frontend engineering, performance budgets and Core Web Vitals; practical experience running A/B tests when needed",
     "Live systems & shows: MIDI/MTC, Max devices, clocking networks, and hardened fail-safe stage rigs",
   ],
@@ -47,7 +47,9 @@ const data = {
       company: "565 Media",
       years: "2016–Present",
       bullets: [
+        "Built solutions for 30+ marketing clients using Klaviyo, Google APIs, Strapi, WordPress, Twilio, and DigitalOcean.",
         "Modular LP system powering UA at scale for Hungryroot (early stage → ~$1B valuation).",
+        "Built and managed 565media.com (Node.js/Strapi/Next.js); previously custom WordPress theme.",
         "Continuous A/B tests, clean event schemas, SEO-aware React/Next builds, CI/CD; green Web Vitals.",
       ],
       link: "https://565media.com"
@@ -64,7 +66,7 @@ const data = {
       company: "Ric Wake / RB-360",
       years: "2016–2019",
       bullets: [
-        "One-person on-stage live-looping rig with fail-safe recovery.",
+        "Created a one-person on-stage live-looping rig with fail-safe recovery.",
         "Max for Live devices + tight sync to Nir Z via MTC and networked clocking.",
       ],
       link: "https://www.rb360.com/"
@@ -74,8 +76,8 @@ const data = {
       company: "OneShotMove",
       years: "2018",
       bullets: [
-        "Booking + instant quoting + payments: Google Maps mileage → live quote → checkout.",
-        "Google Calendar availability integration; ops rules; #1 Yelp in Los Angeles (2018).",
+        "Built complete booking platform with instant quoting and payments using Google Maps mileage calculations.",
+        "Integrated Google Calendar for crew availability and ops rules; company achieved #1 Yelp ranking in Los Angeles (2018).",
       ],
       link: "https://oneshotmove.com"
     },
@@ -106,7 +108,12 @@ const data = {
         "Mobile app (React Native): wallet support, WatermelonDB local store; ENS user profiles; QR sharing to purchase flows.",
         (
           <span key="audioverse-video">
-            <AudioverseVideoLink src="/videos/audioverse.mp4" />
+            <VideoPopup 
+              src="/videos/audioverse.mp4" 
+              linkText="click here for video example"
+              description='This demo uses mock data for the "Audioverse" and "Feed" screens to illustrate flows that would normally require larger amounts of user data. "Scan", "Library", and "Profile" screens all use real blockchain data on the Goerli test network and real IPFS peer shared data for full decentralization.'
+              linkColor="text-accent"
+            />
           </span>
         ),
       ],
@@ -151,6 +158,7 @@ const data = {
     "Docker",
     "Nginx",
     "CI/CD",
+    "DevOps",
     "C#",
     "Shopify API",
     "Neo4j",
