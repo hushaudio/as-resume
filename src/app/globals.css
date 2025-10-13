@@ -28,7 +28,7 @@
     --muted: #9aa79c;
     --accent: #60a5fa;
     --accent-green: #86efac;
-    --accent-brown: #d78736;
+    --accent-brown: #ff8000;
     --accent-bright: #55a1ff;
     --accent-purple: #c084fc;
     --surface: rgba(255,255,255,0.02);
@@ -42,8 +42,11 @@
   --color-background: #ffffff;
   --color-foreground: #0b0f0c;
   --muted: #6b7280;
-  --accent: #2563eb;
-  --accent-green: #059669;
+  --accent: #0073ff;
+  --accent-green: #0ec78c;
+  --accent-brown: #ff6200;
+  --accent-bright: #55a1ff;
+  --accent-purple: #7c3aed;
   --surface: #f8fafc;
   --muted-bg: #f1f5f9;
   --border: rgba(15,23,42,0.06);
@@ -53,8 +56,11 @@
   --color-background: #0b0f0c;
   --color-foreground: #e8f1ea;
   --muted: #9aa79c;
-  --accent: #60a5fa;
+  --accent: #72b8ff;
   --accent-green: #86efac;
+  --accent-brown: #fc9024;
+  --accent-bright: #55a1ff;
+  --accent-purple: #c084fc;
   --surface: rgba(255,255,255,0.02);
   --muted-bg: rgba(255,255,255,0.02);
   --border: rgba(255,255,255,0.06);
@@ -73,4 +79,3 @@
 
 html,body { height:100% }
 body { background:var(--color-background); color:var(--color-foreground); transition: background-color 160ms linear, color 160ms linear }
-

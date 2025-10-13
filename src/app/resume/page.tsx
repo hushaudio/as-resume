@@ -129,7 +129,7 @@ const data = {
     "Orgy — 'Talk Sick', 'Monster in Me'",
   ],
   skills: {
-    frontend: ["React", "Next.js", "React Native", "TypeScript", "EJS", "HTML/CSS", "handlebars"],
+    frontend: ["React", "Next.js", "React Native", "TypeScript", "Three.js", "EJS", "HTML/CSS", "handlebars"],
     backend: ["Node.js", "NestJS", "Express", "Python", "SQL", "TypeORM", "Prisma", "MongoDB", "Mongoose", "Neo4j"],
     audio: ["C++", "JUCE", "Max for Live", "MIDI/MTC"],
     ai: ["ONNX Runtime", "Transformers/HF", "inference pipelines (local/cloud)", "Runpod", "Google Colab"],

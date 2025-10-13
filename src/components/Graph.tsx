@@ -134,6 +134,7 @@ const data = {
     "React",
     "Next.js",
     "React Native",
+    "Three.js",
     "NestJS",
     "Node.js",
     "TypeScript",

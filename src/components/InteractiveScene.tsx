@@ -188,14 +188,12 @@ export default function InteractiveScene({ graph }: { graph: GraphData }) {
 
           {(hover || tapId) && (
             <div
-              className="pointer-events-none absolute rounded px-2 py-1 text-[11px] ring-1"
+              className="pointer-events-none absolute rounded px-3 py-2 text-xs ring-1 backdrop-blur-md shadow-lg text-[var(--color-foreground)] bg-[var(--surface)]"
               style={{
                 left: (hover?.x ?? 12) + 8,
                 top: (hover?.y ?? 12) + 8,
                 zIndex: 60,
-                backgroundColor: 'var(--surface)',
-                color: 'var(--color-foreground)',
-                borderColor: 'var(--border)',
+                ['--tw-ring-color' as any]: 'var(--border)'
               }}
             >
               {hover?.label || graph.nodes.find((n) => n.id === tapId)?.label}

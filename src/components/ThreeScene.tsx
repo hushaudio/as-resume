@@ -872,7 +872,7 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
       
       {/* Controls help icon - Mobile */}
       {ready && isTouchDevice && !mobileOpen && (
-        <div className="absolute top-16 right-4 z-20">
+        <div className="absolute top-20 right-4 z-20">
           <button
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[var(--surface)] backdrop-blur-sm ring-1 transition-all active:opacity-90"
             style={{ ['--tw-ring-color' as any]: 'var(--border)' }}
