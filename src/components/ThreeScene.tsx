@@ -916,7 +916,7 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="text-[var(--accent-green)] font-medium min-w-[80px]">Select:</span>
-                    <span>Tap node or label to open details</span>
+                    <span>Tap node or label to view details and highlight connections</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="text-orange-400 font-medium min-w-[80px]">Explore:</span>

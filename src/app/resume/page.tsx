@@ -194,7 +194,12 @@ export default function Resume() {
   }, [isDark]);
 
   return (
-    <main className="prose prose-invert mx-auto max-w-3xl mt-18 px-4">
+    <main className="prose prose-invert mx-auto max-w-3xl mt-18 px-4 relative">
+      {/* Animated gradient background */}
+      <div className="fixed inset-0 -z-10 opacity-10 pointer-events-none">
+        <div className="absolute inset-0 bg-gradient-to-br from-accent via-accent-green to-accent-purple animate-gradient-shift" />
+      </div>
+      
       <header className="flex flex-col md:flex-row justify-center items-center gap-6 mb-8">
         <div className="flex-shrink-0 w-[200px] md:w-42 aspect-square">
           {isDark !== null && (

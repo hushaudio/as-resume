@@ -28,8 +28,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning className="">
       <head>
+        {/* Apply saved theme ASAP to prevent FOUC - runs before React hydration */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function() { try { var d = document.documentElement; var s = localStorage.getItem('theme'); if (s === 'dark' || s === 'light') { d.className = s; } } catch(e) {} })();`,
+          }}
+        />
         {/* Comprehensive favicon support for crisp rendering */}
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-light.png" media="(prefers-color-scheme: light)" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-dark.png" media="(prefers-color-scheme: dark)" />
@@ -44,14 +50,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Theme color */}
         <meta name="theme-color" content="#0A0A0A" media="(prefers-color-scheme: dark)" />
         <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)" />
-        {/* Apply saved theme ASAP to prevent FOUC */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(() => { try { var d = document.documentElement; var s = localStorage.getItem('theme'); if (s === 'dark' || s === 'light') { d.classList.add(s); } } catch(e) {} })();`,
-          }}
-        />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
         {/* Transparent floating nav */}
         <div className="fixed top-4 left-0 right-0 z-50 pointer-events-none">
           <nav className="mx-auto max-w-4xl px-4">
