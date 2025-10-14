@@ -744,11 +744,13 @@ export default function ThreeScene({ graph }: { graph: GraphData }) {
     return memo.nodes.filter((n) => ids.has(n.id));
   }, [hover, locked, memo, isTouchDevice]);
 
-  // Active selection for desktop: prefer locked over hover
+  // Active selection
+  // - Desktop: prefer locked over hover
+  // - Mobile: prefer persistent selection (mobileSelectedId) over transient hover
   const activeId = useMemo(() => {
-    if (isTouchDevice) return hover?.id ?? null;
+    if (isTouchDevice) return (mobileSelectedId ?? hover?.id) ?? null;
     return (locked?.id ?? hover?.id) ?? null;
-  }, [hover, locked, isTouchDevice]);
+  }, [hover, locked, isTouchDevice, mobileSelectedId]);
 
   // Update active node ref for edge highlighting
   useEffect(() => {

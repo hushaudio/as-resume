@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Footer from "@/components/Footer";
 import VideoPopup from "@/components/VideoPopup";
 
@@ -18,7 +21,7 @@ const data = {
     "Iron Man 3",
   ],
   about:
-    "I turn prototypes into production across web/mobile (TypeScript: Next.js, React Native), audio DSP/JUCE (C++), and local-AI (Python/ONNX). I design for failure and scale—stable on stage, fast in prod—with analytics/CRO wired in. Recent wins: unblocked iOS releases for a UE5 game team, shipped ONNX-powered audio generation in a JUCE VST, and kept LPs fast under ~1M daily visits.",
+    "I take ideas from prototype to production across web/mobile (TypeScript: Next.js, React Native), audio DSP/JUCE (C++), and local-AI (Python/ONNX). I build robust, scalable systems—with analytics and CRO integrated. Recent work: unblocked iOS releases for deadmau5's UE5 game team, shipped ONNX-powered audio generation in a JUCE VST plugin, and kept marketing LPs fast with over ~1M daily visits.",
   whatIDo: [
     "Product & Platform: Next.js/React Native, Node.js/NestJS, JUCE/C++, TypeScript",
     "Audio/AI: ONNX, Transformers/HF, local + cloud inference, real-time DSP",
@@ -28,13 +31,12 @@ const data = {
   experience: [
     {
       title: "Contract Engineer",
-      company: "565 Media / OneShotMove",
+      company: "565 Media",
       years: "2015–Present",
       bullets: [
         <>Delivered LP/analytics systems for <strong>50+ clients</strong>; owned GA/GTM/Klaviyo/Mail/SMS integrations end-to-end.</>,
         <><strong>Hungryroot</strong>: modular LP framework that scaled user acquisition; handled up to ~<strong>1M daily visits</strong> with Core Web Vitals passing and &lt;2.5s LCP on priority routes; improved experiment cadence and pixel hygiene, leading to noticeably better CPA.</>,
-        "Built and maintained 565media.com (Node/Strapi/Next); migrated from legacy WordPress while preserving SEO equity.",
-        <><strong>OneShotMove</strong>: Booking platform with instant quotes (Google Maps mileage); integrated crew availability (Google Calendar); contributed to <strong>#1 Yelp rank (2018)</strong>.</>
+        "Built and maintained 565media.com (Node/Strapi/Next); migrated from legacy WordPress while preserving SEO equity."
       ],
       link: "https://565media.com"
     },
@@ -44,7 +46,7 @@ const data = {
       years: "2024–Present",
       bullets: [
         "Unblocked TestFlight for *Mowingtons* by fixing provisioning, bundle IDs, and entitlements; cut release lead time to ~4 hours.",
-        "Offered a streamlined TestFlight pipeline; instead, Joel asked me to join the team directly so they could depend on me for releases instead of a publisher."
+        "Offered a streamlined TestFlight pipeline; instead, Joel asked me to join the team directly so they could depend on me for releases instead of a competative game publisher."
       ],
       link: "https://store.steampowered.com/app/2766880/Meowingtons_Simulator/"
     },
@@ -74,6 +76,16 @@ const data = {
         "Designed and deployed an advanced live-looping rig spanning two networked computers and multiple MIDI devices, featuring automatic fail-safe recovery; synchronized Ableton (Max for Live) to the drummer over the network via MTC. Highly resilient, complex multi-device system."
       ],
       link: "https://www.rb360.com/"
+    },
+    {
+      title: "Full-Stack Engineer",
+      company: "OneShotMove",
+      years: "2018",
+      bullets: [
+        <>Built complete booking platform with instant quotes (Google Maps mileage API); integrated crew availability (Google Calendar) and custom ops rules.</>,
+        <>Company achieved <strong>#1 Yelp ranking in Los Angeles (2018)</strong> during my tenure; platform handled real-time scheduling, payments, and dispatch coordination.</>
+      ],
+      link: "https://oneshotmove.com"
     },
   ],
   accomplishments: [
@@ -139,15 +151,59 @@ const data = {
 } as const;
 
 export default function Resume() {
+  const [isDark, setIsDark] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+
+    const getIsDark = () => {
+      const saved = localStorage.getItem("theme");
+      if (saved === "dark") return true;
+      if (saved === "light") return false;
+      return mq.matches; // system
+    };
+
+    setIsDark(getIsDark());
+
+    const onSystemChange = () => {
+      if (!localStorage.getItem("theme")) {
+        setIsDark(mq.matches);
+      }
+    };
+
+    const onStorageChange = () => {
+      setIsDark(getIsDark());
+    };
+
+    mq.addEventListener("change", onSystemChange);
+    window.addEventListener("storage", onStorageChange);
+    
+    // Poll for theme changes (for same-tab updates)
+    const interval = setInterval(() => {
+      const currentIsDark = getIsDark();
+      if (currentIsDark !== isDark) {
+        setIsDark(currentIsDark);
+      }
+    }, 100);
+
+    return () => {
+      mq.removeEventListener("change", onSystemChange);
+      window.removeEventListener("storage", onStorageChange);
+      clearInterval(interval);
+    };
+  }, [isDark]);
+
   return (
     <main className="prose prose-invert mx-auto max-w-3xl mt-18 px-4">
       <header className="flex flex-col md:flex-row justify-center items-center gap-6 mb-8">
-        <div className="flex-shrink-0">
-          <img
-            src="/images/headshot2.png"
-            alt="Aaron Shier headshot"
-            className="w-[200px] md:w-42 h-auto object-cover rounded-full"
-          />
+        <div className="flex-shrink-0 w-[200px] md:w-42 aspect-square">
+          {isDark !== null && (
+            <img
+              src={isDark ? "/images/headshot3.png" : "/images/headshot2.png"}
+              alt="Aaron Shier headshot"
+              className="w-full h-full object-cover rounded-full"
+            />
+          )}
         </div>
         <div className="flex flex-col gap-2 text-center md:text-left">
           <div>
