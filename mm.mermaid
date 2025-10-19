@@ -1,0 +1,50 @@
+flowchart TD
+  %% === Triggers & Setup ===
+  A[Timer Trigger\n(e.g., cron/daily)] --> B[Initialize Run\nload config + time cap]
+  B --> C[Pull \"Suggested Next Topics\"\nfrom DB]
+  C --> D[Quick Research Run\nfind fresh tech updates]
+  D --> E[Assemble Topics Array (max 10)\nstandardized Topic objects\n{ id, title, details, term_results[], results[], ... }]
+  E --> F{{For each Topic in topics[0..9]}}
+  
+  %% === Topic Loop ===
+  subgraph G[Topic Loop]
+    direction TB
+    F --> G1[Generate 5 Search Terms\nfor Topic]
+    G1 --> G2{{For each of 5 Terms}}
+
+    %% === Term Loop ===
+    subgraph H[Term Loop]
+      direction TB
+      G2 --> H1[Free Web Search\n(HTML SERP fetch)]
+      H1 --> H2[Single Relevance Pass\nTool/Function: filter to items\nrelevant to Topic]
+      H2 --> H3{URL already collected?}
+      H3 -- Yes --> H4[Load raw data from DB\n(by canonical URL)]
+      H3 -- No --> H5[Fetch Web Page Data\nHTTP first → Headless if needed]
+      H4 --> H6[Distill Relevant Content\n→ one large chunk\n+ footnote of opinions/author stance]
+      H5 --> H6
+      H6 --> H7[Append chunk to\nterm_results[] on Topic]
+      H7 --> H8[Next Term]
+    end
+    H8 --> G3[On term-loop completion:\npush 5 term_results into\nTopic.results[]]
+    G3 --> G4[Next Topic]
+  end
+
+  %% === After All Topics ===
+  G4 --> I[Dispatch each Topic\n→ Writers Pipeline (separate)]
+  I --> J[Persist Run Artifacts & Stats]
+
+  %% === Data Stores / Utilities ===
+  C --- DB[(SQLite DB)]
+  H4 --- DB
+  H3 --->|Canonical URL lookup| DB
+  J --- DB
+
+  %% === Notes & Guards ===
+  classDef note fill:#f6f6f6,stroke:#bbb,color:#333;
+  N1:::note --- B
+  N2:::note --- H5
+  N3:::note --- H6
+
+  N1[Time Cap Enforced Later:\nDrop/Down-rank items outside last N months]
+  N2[Polite Fetching:\nrobots.txt, low QPS, jittered delays;\nheadless only if necessary]
+  N3[Full-Content Embedding Later:\nRuthless HTML cleanup first;\nonly chunk if extremely long]

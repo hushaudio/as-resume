@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Post {
+  id                    Int      @id @default(autoincrement())
+  title                 String
+  slug                  String   @unique
+  content               String
+  excerpt               String?
+  postType              String   @map("post_type") @default("blog")
+  status                String   @default("draft")
+  youtubeVideoId        String?  @map("youtube_video_id")
+  youtubeChannelId      String?  @map("youtube_channel_id")
+  topicId               String?  @map("topic_id")
+  wordCount             Int      @map("word_count") @default(0)
+  readingTimeMinutes    Int?     @map("reading_time_minutes")
+  tags                  String[]
+  category              String?
+  publishedAt           DateTime? @map("published_at")
+  createdAt             DateTime @map("created_at") @default(now())
+  updatedAt             DateTime @map("updated_at") @updatedAt
+
+  @@map("posts")
+}
+
+model YouTubeVideo {
+  id            Int      @id @default(autoincrement())
+  videoId       String   @unique @map("video_id")
+  channelId     String?  @map("channel_id")
+  title         String?
+  url           String?
+  publishedAt   DateTime? @map("published_at")
+  durationS     Int?     @map("duration_s")
+  description   String?
+  tags          Json?
+  transcriptStatus String? @map("transcript_status")
+  transcriptLangs Json? @map("transcript_langs")
+  processedAt   DateTime? @map("processed_at")
+  topicId       String?  @map("topic_id")
+  embedding     Unsupported("vector(1536)")?
+  createdAt     DateTime @map("created_at") @default(now())
+  updatedAt     DateTime @map("updated_at") @updatedAt
+
+  @@map("youtube_videos")
+}
+
+model YouTubeChannel {
+  id                    Int      @id @default(autoincrement())
+  channelId             String?  @unique @map("channel_id")
+  handle                String?  @unique
+  title                 String?
+  category              String?
+  priorityBand          String?  @map("priority_band")
+  authorityWeight       Float?   @map("authority_weight")
+  uploadsFeedUrl        String?  @map("uploads_feed_url")
+  sourceUrl             String?  @map("source_url")
+  lastPolledAt          DateTime? @map("last_polled_at")
+  pollIntervalMinutes   Int?     @map("poll_interval_minutes")
+  createdAt             DateTime @map("created_at") @default(now())
+  updatedAt             DateTime @map("updated_at") @updatedAt
+
+  @@map("youtube_channels")
+}

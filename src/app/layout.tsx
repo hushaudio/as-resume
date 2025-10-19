@@ -55,15 +55,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Transparent floating nav */}
         <div className="fixed top-4 left-0 right-0 z-50 pointer-events-none">
           <nav className="mx-auto max-w-4xl px-4">
-            <div className="grid grid-cols-3 items-center rounded-full bg-[var(--surface)] backdrop-blur-md px-4 py-2 ring-1 border-theme pointer-events-auto select-none" style={{ ['--tw-ring-color' as string]: 'var(--border)' }}>
+            <div className="grid grid-cols-5 items-center rounded-full bg-[var(--surface)] backdrop-blur-md px-4 py-2 ring-1 border-theme pointer-events-auto select-none" style={{ ['--tw-ring-color' as string]: 'var(--border)' }}>
               <div className="justify-self-start">
-                <Link href="/resume" className="text-sm text-[var(--color-foreground)]/90 hover:opacity-100 transition-opacity">Classic Resume</Link>
+                <Link href="/resume" className="text-sm text-[var(--color-foreground)]/90 hover:opacity-100 transition-opacity">Resume</Link>
+              </div>
+              <div className="justify-self-center">
+                <Link href="/blog" className="text-sm text-[var(--color-foreground)]/90 hover:opacity-100 transition-opacity">Blog</Link>
               </div>
               <div className="justify-self-center">
                 <ThemeToggle />
               </div>
+              <div className="justify-self-center">
+                <Link href="/markdown-test" className="text-sm text-[var(--color-foreground)]/90 hover:opacity-100 transition-opacity">Test</Link>
+              </div>
               <div className="justify-self-end">
-                <Link href="/graph" className="text-sm text-[var(--color-foreground)]/90 hover:opacity-100 transition-opacity">Experience Graph</Link>
+                <Link href="/graph" className="text-sm text-[var(--color-foreground)]/90 hover:opacity-100 transition-opacity">Graph</Link>
               </div>
             </div>
           </nav>
