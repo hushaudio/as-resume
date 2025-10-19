@@ -43,7 +43,15 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
       </div>
 
       <header className="mb-8">
-        <h1 className="text-3xl font-bold mb-4">Blog Admin</h1>
+        <div className="flex justify-between items-start mb-4">
+          <h1 className="text-3xl font-bold">Blog Admin</h1>
+          <Link 
+            href="/logout"
+            className="px-4 py-2 bg-red-600/20 text-red-400 border border-red-600/30 rounded-lg hover:bg-red-600/30 transition-colors"
+          >
+            Logout
+          </Link>
+        </div>
         <p className="text-muted-foreground mb-6">
           Manage blog posts and publishing status.
         </p>

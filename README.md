@@ -2,7 +2,28 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+### Environment Setup
+
+First, set up your environment variables:
+
+```bash
+# Run the setup script to create .env.local
+./setup-env.sh
+```
+
+Or manually create a `.env.local` file with:
+
+```env
+# Admin Authentication
+ADMIN_PW=your_admin_password
+
+# Database Connection (if needed)
+# DATABASE_URL=postgresql://user:pass@host:port/database
+```
+
+### Development Server
+
+Then, run the development server:
 
 ```bash
 npm run dev
@@ -16,9 +37,19 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Admin Panel
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Access the admin panel at `/admin` with the password set in your `ADMIN_PW` environment variable.
+
+- **Admin URL**: `http://localhost:3000/admin`
+- **Default Password**: `ffwawa108` (change in `.env.local`)
+
+## Features
+
+- **Blog System**: Integrated blog with markdown support
+- **Admin Panel**: Protected admin interface for managing blog posts
+- **Authentication**: Secure session-based authentication
+- **Responsive Design**: Works on desktop and mobile devices
 
 ## Learn More
 
