@@ -5,6 +5,9 @@ import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import Link from 'next/link';
 
+// Import highlight.js CSS for syntax highlighting
+import 'highlight.js/styles/github.css';
+
 interface MarkdownRendererProps {
   content: string;
 }
